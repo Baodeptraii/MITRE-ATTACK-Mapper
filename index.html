@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Công cụ mapping hành động APT sang kỹ thuật MITRE ATT&CK — phục vụ xây dựng kịch bản diễn tập tấn công.">
+    <title>ATT&CK Mapper — APT Behavior to T-Code</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="src/css/style.css?v=6">
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div class="app-wrapper">
+
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-logo">
+                <div class="logo-icon-wrap">
+                    <i class="fa-solid fa-shield-virus"></i>
+                </div>
+                <div class="header-titles">
+                    <h1>ATT&CK Mapper</h1>
+                    <p class="header-subtitle">APT Behavior → Tactic → Technique → Kịch bản</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <button id="drawerToggleBtn" class="btn btn-ghost" style="margin-right: 12px;">
+                    <i class="fa-solid fa-bars"></i> Menu
+                </button>
+                <div class="status-badge" id="dbStatus">
+                    <div class="status-dot loading"></div>
+                    <span id="dbStatusText">Đang tải database...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN INPUT AREA -->
+        <main class="main-content">
+
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-label">
+                    <i class="fa-solid fa-terminal"></i>
+                    <span>Nhập hành động của APT <em>(tiếng Việt hoặc tiếng Anh)</em></span>
+                </div>
+                <div class="input-area-wrap">
+                    <textarea
+                        id="aptInput"
+                        class="apt-input"
+                        placeholder="Ví dụ:&#10;• Gửi email lừa đảo đính kèm file Word có macro độc hại&#10;• Dump mật khẩu từ bộ nhớ LSASS bằng Mimikatz&#10;• Tạo scheduled task để persistence&#10;• Pass-the-Hash để lateral movement qua SMB&#10;• Khai thác lỗ hổng Log4j trên web server&#10;• DNS tunneling để exfiltrate dữ liệu"
+                        disabled
+                        rows="6"
+                    ></textarea>
+                    <div class="input-controls">
+                        <div class="input-hint">
+                            <i class="fa-regular fa-lightbulb"></i>
+                            Mỗi dòng = 1 hành động APT. Hệ thống tự động dịch tiếng Việt và mapping sang T-Code.
+                        </div>
+                        <div class="input-actions">
+                            <button id="matrixBtn" class="btn btn-ghost" disabled>
+                                <i class="fa-solid fa-table-cells"></i> Hiện Ma trận
+                            </button>
+                            <button id="clearBtn" class="btn btn-ghost" disabled>
+                                <i class="fa-solid fa-xmark"></i> Xóa
+                            </button>
+                            <button id="mapBtn" class="btn btn-primary" disabled>
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span>Mapping</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filter Bar -->
+            <section class="filter-section" id="filterSection" style="display:none;">
+                <div class="filter-label">
+                    <i class="fa-solid fa-filter"></i> Lọc theo Tactic:
+                </div>
+                <div class="tactic-pills" id="tacticFilter">
+                    <button class="pill active" data-tactic="all">Tất cả</button>
+                </div>
+                <div class="results-summary" id="resultsSummary"></div>
+                
+                <div class="coverage-legend" id="coverageLegend" style="display:none">
+                    <span class="legend-title">Chú thích cột Detection:</span>
+                    <div class="legend-item">
+                        <span class="legend-badge has-rule">
+                            <i class="fa-solid fa-circle-check"></i> Tool
+                        </span>
+                        <span>Có log coverage + có rule sẵn → click để xem rule</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-badge log-coverage">
+                            <i class="fa-regular fa-circle"></i> Tool
+                        </span>
+                        <span>Có log coverage nhưng chưa có rule → click để xem log types</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Table -->
+            <section class="results-section" id="resultsSection" style="display:none;">
+                <div class="table-container">
+                    <table class="mapping-table" id="mappingTable">
+                        <thead>
+                          <tr>
+                            <th class="col-input">
+                              <div class="header-cell">
+                                <div class="header-title">
+                                  <i class="fa-solid fa-terminal"></i>
+                                  Hành động APT
+                                </div>
+                                <div class="header-desc">Input của kẻ tấn công</div>
+                              </div>
+                            </th>
+                        
+                            <th class="col-mapping">
+                              <div class="header-cell">
+                                <div class="header-title">
+                                  <i class="fa-solid fa-crosshairs"></i>
+                                  ATT&CK Techniques
+                                </div>
+                                <div class="header-desc">Mapping tới MITRE ATT&CK</div>
+                              </div>
+                            </th>
+                        
+                            <th class="col-scenario">
+                              <div class="header-cell">
+                                <div class="header-title">
+                                  <i class="fa-solid fa-database"></i>
+                                  Log Sources (MITRE)
+                                </div>
+                              </div>
+                            </th>
+                        
+                            <th class="col-tools">
+                              <div class="header-cell">
+                                <div class="header-title">
+                                  <i class="fa-solid fa-shield-halved"></i>
+                                  Detection Coverage
+                                </div>
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody id="mappingTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Empty / Loading State -->
+            <section class="empty-state" id="emptyState">
+                <div class="empty-icon">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                </div>
+                <h2>Sẵn sàng phân tích</h2>
+                <p>Nhập hành động của APT vào ô trên, mỗi dòng một hành động.<br>
+                Hệ thống sẽ tự động mapping ra Tactic, T-Code và kịch bản detection tương ứng.</p>
+
+                <!-- Quick examples -->
+                <div class="quick-examples">
+                    <div class="qe-label">Thử nhanh:</div>
+                    <div class="qe-chips">
+                        <button class="qe-chip" data-example="Gửi email phishing đính kèm file Excel macro&#10;Dump credentials từ LSASS memory&#10;Tạo scheduled task để persistence&#10;Pass-the-Hash lateral movement qua SMB">Ransomware Chain</button>
+                        <button class="qe-chip" data-example="Khai thác Log4j trên web server public&#10;Cài webshell vào server&#10;Leo thang đặc quyền lên root&#10;DNS tunneling để exfil dữ liệu">APT Espionage</button>
+                        <button class="qe-chip" data-example="Process injection vào svchost.exe&#10;Xóa Windows event logs&#10;Dùng LOLBins để bypass AV&#10;PowerShell obfuscated fileless">Evasion &amp; PrivEsc</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading state -->
+            <section class="loading-state" id="loadingState" style="display:none;">
+                <div class="loading-spinner-big">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                </div>
+                <p>Đang phân tích và mapping...</p>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <span>Dữ liệu từ <a href="https://attack.mitre.org" target="_blank">MITRE ATT&CK Enterprise</a> (STIX 2.1)</span>
+            <span class="footer-sep">•</span>
+            <span>Phục vụ diễn tập tấn công & xây dựng kịch bản SOC</span>
+        </footer>
+    </div>
+
+    <!-- MODAL CHO GỢI Ý RULE / THÔNG TIN -->
+    <div id="infoModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thông tin</h3>
+                <button id="closeModalBtn" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="modal-content-body">
+                <!-- Nội dung sẽ được inject vào đây -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHO DETECTION MATRIX -->
+    <div id="matrixModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container modal-matrix-container">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-table-cells"></i> Ma Trận Phủ Detection: ATT&CK × Log Sources</h3>
+                <button id="closeMatrixBtn" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="matrixContent" class="modal-content-body matrix-body">
+                <!-- Ma trận sẽ được vẽ ở đây -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDE DRAWER (Tính năng tương lai) -->
+    <div id="sideDrawer" class="side-drawer">
+        <div class="drawer-header">
+            <h3><i class="fa-solid fa-toolbox"></i> Công Cụ Mở Rộng</h3>
+            <button id="closeDrawerBtn" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-content">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Tính năng đang phát triển, phục vụ việc đóng góp và quản lý kịch bản.</p>
+            
+            <div class="drawer-menu-item">
+                <i class="fa-solid fa-plus"></i>
+                <div class="dmi-text">
+                    <strong>Add Rule</strong>
+                    <span>Thêm Sigma/Wazuh rule mới</span>
+                </div>
+                <span class="dmi-badge">Sắp có</span>
+            </div>
+
+            <div class="drawer-menu-item">
+                <i class="fa-solid fa-file-circle-plus"></i>
+                <div class="dmi-text">
+                    <strong>Add Kịch bản</strong>
+                    <span>Tạo kịch bản diễn tập APT</span>
+                </div>
+                <span class="dmi-badge">Sắp có</span>
+            </div>
+
+            <div class="drawer-menu-item">
+                <i class="fa-solid fa-list-check"></i>
+                <div class="dmi-text">
+                    <strong>View Rules Database</strong>
+                    <span>Quản lý database rules_db.json</span>
+                </div>
+                <span class="dmi-badge">Sắp có</span>
+            </div>
+            
+            <div class="drawer-menu-item">
+                <i class="fa-solid fa-book-journal-whills"></i>
+                <div class="dmi-text">
+                    <strong>View Kịch bản</strong>
+                    <span>Xem danh sách kịch bản hiện có</span>
+                </div>
+                <span class="dmi-badge">Sắp có</span>
+            </div>
+            <div class="drawer-menu-item">
+                <i class="fa-solid fa-book-journal-whills"></i>
+                <div class="dmi-text">
+                    <strong>View Stix </strong>
+                    <a style="color: inherit; text-decoration: underline;" href="scratch/inspect_stix.html" target="_blank">Xem dữ liệu STIX</a>
+                </div>
+                <span class="dmi-badge">Sắp có</span>
+            </div>
+
+        </div>
+    </div>
+    <div id="drawerOverlay" class="drawer-overlay" style="display: none;"></div>
+
+    <script src="src/js/app.js?v=6"></script>
+</body>
+</html>

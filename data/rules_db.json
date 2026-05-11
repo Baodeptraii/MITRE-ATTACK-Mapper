@@ -1,0 +1,161 @@
+{
+  "T1566.001": [
+    {
+      "source": "Sigma",
+      "name": "Spearphishing Attachment Execution",
+      "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\cmd.exe' OR Image='*\\powershell.exe'",
+      "confidence": "High",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml"
+    },
+    {
+      "source": "Suricata",
+      "name": "Suspicious Office Document Download",
+      "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious Office File Download\"; fileext:\"docm\"; sid:1000001;)",
+      "confidence": "Medium",
+      "reference": "https://rules.emergingthreats.net/"
+    }
+  ],
+  "T1566.002": [
+    {
+      "source": "Sigma",
+      "name": "Spearphishing Link Clicked",
+      "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\chrome.exe' OR Image='*\\msedge.exe'",
+      "confidence": "Low",
+      "reference": ""
+    }
+  ],
+  "T1059.001": [
+    {
+      "source": "Sigma",
+      "name": "Suspicious PowerShell Execution",
+      "query": "EventID=1 AND (CommandLine contains '-enc' OR CommandLine contains 'DownloadString')",
+      "confidence": "High",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml"
+    },
+    {
+      "source": "Wazuh",
+      "name": "PowerShell Script Block Logging",
+      "query": "<rule id=\"100002\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.scriptBlockText\">Invoke-Mimikatz|DownloadString</field>\n</rule>",
+      "confidence": "High",
+      "reference": "https://wazuh.com/"
+    },
+    {
+      "source": "Sysmon",
+      "name": "PowerShell Network Connection",
+      "query": "EventID=3 AND Image='*\\powershell.exe'",
+      "confidence": "Medium",
+      "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003"
+    }
+  ],
+  "T1003.001": [
+    {
+      "source": "Sigma",
+      "name": "LSASS Memory Dump",
+      "query": "EventID=10 AND TargetImage='*\\lsass.exe' AND GrantedAccess='0x1010'",
+      "confidence": "High",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml"
+    },
+    {
+      "source": "Elastic",
+      "name": "Credential Dumping via Mimikatz",
+      "query": "process where event.type == \"start\" and process.name : \"mimikatz.exe\"",
+      "confidence": "High",
+      "reference": "https://github.com/elastic/detection-rules/blob/main/rules/windows/credential_access_mimikatz.toml"
+    }
+  ],
+  "T1053.005": [
+    {
+      "source": "Sigma",
+      "name": "Scheduled Task Creation",
+      "query": "EventID=1 AND Image='*\\schtasks.exe' AND CommandLine contains '/create'",
+      "confidence": "Medium",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml"
+    },
+    {
+      "source": "Wazuh",
+      "name": "Scheduled Task Registry Modification",
+      "query": "<rule id=\"100003\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetObject\">*\\Schedule\\TaskCache\\Tasks\\*</field>\n</rule>",
+      "confidence": "High",
+      "reference": ""
+    }
+  ],
+  "T1190": [
+    {
+      "source": "Suricata",
+      "name": "Log4j JNDI Lookup Execution",
+      "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Log4j JNDI Attempt\"; content:\"${jndi:\"; sid:1000002;)",
+      "confidence": "High",
+      "reference": "https://rules.emergingthreats.net/"
+    },
+    {
+      "source": "Wazuh",
+      "name": "Web Server Exploitation",
+      "query": "<rule id=\"100004\" level=\"12\">\n  <if_sid>31101</if_sid>\n  <regex>jndi:ldap</regex>\n</rule>",
+      "confidence": "High",
+      "reference": ""
+    }
+  ],
+  "T1505.003": [
+    {
+      "source": "Sigma",
+      "name": "Webshell Creation",
+      "query": "EventID=11 AND Image='*\\w3wp.exe' AND TargetFilename='*\\.aspx'",
+      "confidence": "High",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml"
+    }
+  ],
+  "T1068": [
+    {
+      "source": "Sigma",
+      "name": "Exploitation for Privilege Escalation",
+      "query": "EventID=1 AND ParentImage='*\\spoolsv.exe' AND Image='*\\cmd.exe'",
+      "confidence": "High",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml"
+    }
+  ],
+  "T1071.004": [
+    {
+      "source": "Suricata",
+      "name": "DNS Tunneling Payload",
+      "query": "alert dns $HOME_NET any -> $EXTERNAL_NET 53 (msg:\"Suspicious Long DNS Query\"; dsize:>100; sid:1000003;)",
+      "confidence": "Medium",
+      "reference": "https://rules.emergingthreats.net/"
+    }
+  ],
+  "T1550.002": [
+    {
+      "source": "Sigma",
+      "name": "Pass the Hash Activity",
+      "query": "EventID=4624 AND LogonType=9 AND AuthenticationPackageName='Negotiate'",
+      "confidence": "High",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_pass_the_hash.yml"
+    }
+  ],
+  "T1055.001": [
+    {
+      "source": "Sigma",
+      "name": "Process Injection - Dynamic-link Library Injection",
+      "query": "EventID=8 AND TargetImage='*\\svchost.exe'",
+      "confidence": "High",
+      "reference": ""
+    }
+  ],
+  "T1070.001": [
+    {
+      "source": "Sigma",
+      "name": "Windows Event Log Cleared",
+      "query": "EventID=1102 OR EventID=104",
+      "confidence": "High",
+      "reference": ""
+    }
+  ],
+  "T1218": [
+    {
+      "source": "Sigma",
+      "name": "System Binary Proxy Execution",
+      "query": "EventID=1 AND (Image='*\\rundll32.exe' OR Image='*\\regsvr32.exe')",
+      "confidence": "Medium",
+      "reference": ""
+    }
+  ]
+}

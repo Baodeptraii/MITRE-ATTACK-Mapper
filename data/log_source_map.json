@@ -1,0 +1,119 @@
+{
+  "_comment": "Keywords match against x-mitre-data-component names (lowercase) from ATT&CK STIX v10+. Format: exact substring of the component name. Add new entries without touching app.js.",
+  "categories": [
+    {
+      "id": "network",
+      "label": "Network / Suricata",
+      "cls": "ds-suricata",
+      "icon": "fa-network-wired",
+      "keywords": [
+        "network traffic flow",
+        "network traffic content",
+        "network connection creation",
+        "network share access",
+        "network share creation",
+        "dns resolution",
+        "dns query",
+        "response content",
+        "response metadata",
+        "web credential usage",
+        "internet scan: response",
+        "packet capture"
+      ]
+    },
+    {
+      "id": "process",
+      "label": "Process / Sysmon",
+      "cls": "ds-sysmon",
+      "icon": "fa-microchip",
+      "keywords": [
+        "process creation",
+        "process access",
+        "process termination",
+        "process metadata",
+        "os api execution",
+        "command execution",
+        "script execution",
+        "module load",
+        "image load",
+        "wmi creation",
+        "pipe creation",
+        "ipc metadata"
+      ]
+    },
+    {
+      "id": "host",
+      "label": "Host / Wazuh",
+      "cls": "ds-wazuh",
+      "icon": "fa-server",
+      "keywords": [
+        "file creation",
+        "file modification",
+        "file access",
+        "file deletion",
+        "file metadata",
+        "windows registry key creation",
+        "windows registry key modification",
+        "windows registry key deletion",
+        "service creation",
+        "service modification",
+        "service metadata",
+        "scheduled job creation",
+        "scheduled job modification",
+        "kernel module load",
+        "driver load",
+        "driver metadata",
+        "firmware modification",
+        "boot record modification",
+        "disk content wipe",
+        "snapshot creation",
+        "snapshot metadata",
+        "volume creation",
+        "volume modification",
+        "pod creation",
+        "pod modification",
+        "container creation",
+        "instance creation",
+        "instance modification"
+      ]
+    },
+    {
+      "id": "auth",
+      "label": "Auth / Windows Event",
+      "cls": "ds-auth",
+      "icon": "fa-key",
+      "keywords": [
+        "logon session creation",
+        "logon session metadata",
+        "active directory object access",
+        "active directory object creation",
+        "active directory object modification",
+        "active directory credential request",
+        "user account authentication",
+        "user account creation",
+        "user account modification",
+        "user account deletion",
+        "application log content",
+        "web credential creation",
+        "web credential usage",
+        "certificate registration"
+      ]
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud / API Logs",
+      "cls": "ds-dns",
+      "icon": "fa-cloud",
+      "keywords": [
+        "cloud service metadata",
+        "cloud service modification",
+        "cloud service enumeration",
+        "cloud storage access",
+        "cloud storage creation",
+        "cloud storage modification",
+        "cluster metadata",
+        "cluster modification"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>STIX Data Inspector — Xem dữ liệu gốc từ MITRE</title>
+    <style>
+        body { background: #0a0e1a; color: #e0e6f0; font-family: 'Segoe UI', sans-serif; padding: 30px; }
+        h1 { color: #60a5fa; }
+        .section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 20px; margin: 20px 0; }
+        pre { background: #111827; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; color: #fbbf24; white-space: pre-wrap; }
+        .label { color: #34d399; font-weight: bold; }
+        .muted { color: #6b7280; }
+        .highlight { background: rgba(59,130,246,0.15); padding: 2px 6px; border-radius: 3px; color: #93c5fd; }
+        button { background: linear-gradient(135deg, #1d4ed8, #7c3aed); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        #output { margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+        th, td { text-align: left; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.08); font-size: 12px; }
+        th { background: rgba(59,130,246,0.1); color: #60a5fa; }
+        .has-data { color: #34d399; }
+        .no-data { color: #6b7280; }
+    </style>
+</head>
+<body>
+    <h1>🔍 STIX Data Inspector</h1>
+    <p class="muted">Công cụ này cho phép bạn xem <strong>dữ liệu gốc</strong> từ MITRE ATT&CK STIX — chứng minh rằng mapping technique → log source KHÔNG phải dự đoán.</p>
+    
+    <div class="section">
+        <h3>Cách MITRE cung cấp dữ liệu Detection:</h3>
+        <ol>
+            <li><span class="highlight">x-mitre-data-source</span> — Nguồn dữ liệu (VD: "Process", "Network Traffic", "File")</li>
+            <li><span class="highlight">x-mitre-data-component</span> — Thành phần cụ thể (VD: "Process Creation", "Network Traffic Flow")</li>
+            <li><span class="highlight">relationship (detects)</span> — Liên kết: data-component nào detect được technique nào</li>
+        </ol>
+        <p class="muted">→ Đây là dữ liệu chính thức từ MITRE, không phải suy đoán.</p>
+    </div>
+
+    <button onclick="loadAndInspect()">📥 Tải STIX và phân tích</button>
+    <div id="status" class="muted" style="margin-top:10px;"></div>
+    <div id="output"></div>
+
+<script>
+const STIX_URL = 'https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json';
+
+async function loadAndInspect() {
+    const status = document.getElementById('status');
+    const output = document.getElementById('output');
+    status.textContent = '⏳ Đang tải STIX data (~25MB)...';
+
+    try {
+        const resp = await fetch(STIX_URL);
+        const data = await resp.json();
+        const objects = data.objects;
+
+        status.textContent = `✅ Đã tải ${objects.length} objects.`;
+
+        // 1. Data Sources
+        const dataSources = objects.filter(o => o.type === 'x-mitre-data-source');
+        // 2. Data Components
+        const dataComponents = objects.filter(o => o.type === 'x-mitre-data-component');
+        // 3. Detects relationships
+        const detectsRels = objects.filter(o => o.type === 'relationship' && o.relationship_type === 'detects');
+        // 4. Attack patterns
+        const techniques = objects.filter(o => o.type === 'attack-pattern' && !o.revoked && !o.x_mitre_deprecated);
+
+        // Build lookup maps
+        const compMap = {}; // id -> component object
+        dataComponents.forEach(dc => { compMap[dc.id] = dc; });
+
+        const sourceMap = {}; // id -> data source object
+        dataSources.forEach(ds => { sourceMap[ds.id] = ds; });
+
+        // Build technique -> data components mapping
+        const techCompMap = {}; // tech_stix_id -> [component_names]
+        detectsRels.forEach(rel => {
+            const comp = compMap[rel.source_ref];
+            const techStixId = rel.target_ref;
+            if (!comp) return;
+            if (!techCompMap[techStixId]) techCompMap[techStixId] = [];
+            techCompMap[techStixId].push(comp.name);
+        });
+
+        // Show summary
+        let html = '';
+        
+        html += `<div class="section">
+            <h3>📊 Thống kê STIX Objects</h3>
+            <table>
+                <tr><th>Loại Object</th><th>Số lượng</th><th>Ý nghĩa</th></tr>
+                <tr><td>x-mitre-data-source</td><td class="has-data">${dataSources.length}</td><td>Nguồn dữ liệu (Process, Network Traffic, File...)</td></tr>
+                <tr><td>x-mitre-data-component</td><td class="has-data">${dataComponents.length}</td><td>Thành phần cụ thể (Process Creation, File Modification...)</td></tr>
+                <tr><td>relationship (detects)</td><td class="has-data">${detectsRels.length}</td><td>Liên kết: component nào detect technique nào</td></tr>
+                <tr><td>attack-pattern (active)</td><td class="has-data">${techniques.length}</td><td>Kỹ thuật ATT&CK</td></tr>
+            </table>
+        </div>`;
+
+        // Show all data components grouped by data source
+        html += `<div class="section">
+            <h3>📋 Tất cả Data Components (phân loại theo Data Source)</h3>
+            <p class="muted">Đây chính là cơ sở để mapping technique → log source tool</p>
+            <table>
+                <tr><th>Data Source</th><th>Data Components</th><th>→ Tool phù hợp</th></tr>`;
+
+        // Group components by their parent data source
+        const toolMapping = {
+            'Process': 'Sysmon (EventID 1, 8, 10)',
+            'Network Traffic': 'Suricata / Zeek',
+            'File': 'Sysmon (EventID 11, 23) / Wazuh',
+            'Windows Registry': 'Sysmon (EventID 12, 13, 14) / Wazuh',
+            'Command': 'Sysmon (EventID 1) / EDR',
+            'Module': 'Sysmon (EventID 7)',
+            'Logon Session': 'Windows Event Log (4624, 4625)',
+            'User Account': 'Windows Event Log (4720, 4726)',
+            'Active Directory': 'Windows Event Log / AD Audit',
+            'Service': 'Sysmon (EventID 6) / Wazuh',
+            'Scheduled Job': 'Windows Event Log (4698) / Sysmon',
+            'Driver': 'Sysmon (EventID 6)',
+            'Firewall': 'Firewall Logs / Suricata',
+            'Firmware': 'UEFI/BIOS Logs',
+            'Cloud Service': 'Cloud API Logs (AWS CT, Azure Monitor)',
+            'Container': 'Kubernetes / Docker Logs',
+            'Image': 'Sysmon (EventID 7)',
+            'Malware Repository': 'Threat Intel Platform',
+            'Sensor Health': 'SIEM / EDR Health'
+        };
+
+        dataSources.forEach(ds => {
+            const comps = dataComponents.filter(dc => dc.x_mitre_data_source_ref === ds.id);
+            const compNames = comps.map(c => c.name).join(', ');
+            const toolHint = Object.entries(toolMapping).find(([k]) => ds.name.includes(k));
+            const tool = toolHint ? toolHint[1] : '<span class="muted">Custom</span>';
+            html += `<tr>
+                <td><strong>${ds.name}</strong></td>
+                <td>${compNames || '<span class="no-data">N/A</span>'}</td>
+                <td>${tool}</td>
+            </tr>`;
+        });
+        html += `</table></div>`;
+
+        // Show example techniques with their data components
+        const exampleTids = ['T1059.001', 'T1003.001', 'T1566.001', 'T1190', 'T1110', 'T1053.005', 'T1550.002', 'T1070.001'];
+        
+        html += `<div class="section">
+            <h3>🎯 Ví dụ: Data Components cho các Technique phổ biến</h3>
+            <p class="muted">Dữ liệu này lấy trực tiếp từ STIX — KHÔNG phải dự đoán</p>
+            <table>
+                <tr><th>Technique</th><th>Tên</th><th>Data Components (từ MITRE)</th></tr>`;
+
+        exampleTids.forEach(tid => {
+            const tech = techniques.find(t => {
+                const ext = (t.external_references || []).find(r => r.source_name === 'mitre-attack');
+                return ext && ext.external_id === tid;
+            });
+            if (!tech) return;
+            const comps = techCompMap[tech.id] || [];
+            const ext = tech.external_references.find(r => r.source_name === 'mitre-attack');
+            html += `<tr>
+                <td><strong>${ext.external_id}</strong></td>
+                <td>${tech.name}</td>
+                <td>${comps.length > 0 ? comps.map(c => `<span class="highlight">${c}</span>`).join(', ') : '<span class="no-data">Không có data component</span>'}</td>
+            </tr>`;
+        });
+        html += `</table></div>`;
+
+        // RAW JSON example
+        const sampleComp = dataComponents[0];
+        const sampleRel = detectsRels[0];
+        html += `<div class="section">
+            <h3>🔧 Raw STIX JSON — Ví dụ data component</h3>
+            <pre>${JSON.stringify(sampleComp, null, 2)}</pre>
+            <h3 style="margin-top:16px;">🔧 Raw STIX JSON — Ví dụ relationship (detects)</h3>
+            <pre>${JSON.stringify(sampleRel, null, 2)}</pre>
+        </div>`;
+
+        output.innerHTML = html;
+
+    } catch (err) {
+        status.textContent = '❌ Lỗi: ' + err.message;
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>

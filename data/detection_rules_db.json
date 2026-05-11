@@ -1,0 +1,789 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "Standardized detection rules DB mapped by ATT&CK technique and tool",
+    "tools": ["Suricata", "Sysmon", "Wazuh", "Windows Event Log", "Sigma"],
+    "updated": "2026-05-07"
+  },
+  "T1566.001": {
+    "tactic": "initial-access",
+    "name": "Phishing: Spearphishing Attachment",
+    "rules": {
+      "Suricata": [
+        {
+          "name": "Suspicious Office Document Download",
+          "sid": 1000001,
+          "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious Office File Download\"; fileext:\"docm\"; sid:1000001;)",
+          "confidence": "Medium",
+          "reference": "https://rules.emergingthreats.net/"
+        }
+      ],
+      "Sysmon": [
+        {
+          "name": "Office Application Spawning Shell",
+          "event_id": 1,
+          "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND (Image='*\\cmd.exe' OR Image='*\\powershell.exe')",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml"
+        }
+      ],
+      "Wazuh": [
+        {
+          "name": "Office Macro Execution Alert",
+          "rule_id": 100010,
+          "query": "<rule id=\"100010\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.ParentImage\">OUTLOOK.EXE</field>\n  <field name=\"win.eventdata.Image\">cmd.exe|powershell.exe</field>\n</rule>",
+          "confidence": "High",
+          "reference": "https://wazuh.com/"
+        }
+      ],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Spearphishing Attachment Execution",
+          "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\cmd.exe' OR Image='*\\powershell.exe'",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml"
+        }
+      ]
+    }
+  },
+  "T1566.002": {
+    "tactic": "initial-access",
+    "name": "Phishing: Spearphishing Link",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "Browser Spawned from Email Client",
+          "event_id": 1,
+          "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND (Image='*\\chrome.exe' OR Image='*\\msedge.exe')",
+          "confidence": "Low",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Spearphishing Link Clicked",
+          "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\chrome.exe' OR Image='*\\msedge.exe'",
+          "confidence": "Low",
+          "reference": ""
+        }
+      ]
+    }
+  },
+  "T1190": {
+    "tactic": "initial-access",
+    "name": "Exploit Public-Facing Application",
+    "rules": {
+      "Suricata": [
+        {
+          "name": "Log4j JNDI Lookup Execution",
+          "sid": 1000002,
+          "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Log4j JNDI Attempt\"; content:\"${jndi:\"; sid:1000002;)",
+          "confidence": "High",
+          "reference": "https://rules.emergingthreats.net/"
+        }
+      ],
+      "Sysmon": [],
+      "Wazuh": [
+        {
+          "name": "Web Server Exploitation Log4j",
+          "rule_id": 100004,
+          "query": "<rule id=\"100004\" level=\"12\">\n  <if_sid>31101</if_sid>\n  <regex>jndi:ldap</regex>\n</rule>",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Windows Event Log": [],
+      "Sigma": []
+    }
+  },
+  "T1059.001": {
+    "tactic": "execution",
+    "name": "Command and Scripting Interpreter: PowerShell",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "PowerShell Network Connection",
+          "event_id": 3,
+          "query": "EventID=3 AND Image='*\\powershell.exe'",
+          "confidence": "Medium",
+          "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003"
+        },
+        {
+          "name": "Suspicious PowerShell CommandLine",
+          "event_id": 1,
+          "query": "EventID=1 AND Image='*\\powershell.exe' AND (CommandLine contains '-enc' OR CommandLine contains '-nop')",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [
+        {
+          "name": "PowerShell Script Block Logging",
+          "rule_id": 100002,
+          "query": "<rule id=\"100002\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.scriptBlockText\">Invoke-Mimikatz|DownloadString</field>\n</rule>",
+          "confidence": "High",
+          "reference": "https://wazuh.com/"
+        }
+      ],
+      "Windows Event Log": [
+        {
+          "name": "PowerShell Script Block Logging (4104)",
+          "event_id": 4104,
+          "query": "EventID=4104 AND ScriptBlockText contains suspicious patterns",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Sigma": [
+        {
+          "name": "Suspicious PowerShell Execution",
+          "query": "EventID=1 AND (CommandLine contains '-enc' OR CommandLine contains 'DownloadString')",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml"
+        }
+      ]
+    }
+  },
+  "T1059.003": {
+    "tactic": "execution",
+    "name": "Command and Scripting Interpreter: Windows Command Shell",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "Suspicious cmd.exe Child Process",
+          "event_id": 1,
+          "query": "EventID=1 AND Image='*\\cmd.exe' AND ParentImage NOT IN known_parents",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [
+        {
+          "name": "cmd.exe Execution from Unusual Parent",
+          "rule_id": 100020,
+          "query": "<rule id=\"100020\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.Image\">cmd.exe</field>\n  <field name=\"win.eventdata.ParentImage\" negate=\"yes\">explorer.exe</field>\n</rule>",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Suspicious Command Line Execution",
+          "query": "EventID=1 AND Image='*\\cmd.exe' AND (CommandLine contains '/c' OR CommandLine contains '/k')",
+          "confidence": "Low",
+          "reference": ""
+        }
+      ]
+    }
+  },
+  "T1053.005": {
+    "tactic": "persistence",
+    "name": "Scheduled Task/Job: Scheduled Task",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "Scheduled Task Created via schtasks",
+          "event_id": 1,
+          "query": "EventID=1 AND Image='*\\schtasks.exe' AND CommandLine contains '/create'",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [
+        {
+          "name": "Scheduled Task Registry Modification",
+          "rule_id": 100003,
+          "query": "<rule id=\"100003\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetObject\">*\\Schedule\\TaskCache\\Tasks\\*</field>\n</rule>",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Windows Event Log": [
+        {
+          "name": "Scheduled Task Created (4698)",
+          "event_id": 4698,
+          "query": "EventID=4698",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Sigma": [
+        {
+          "name": "Scheduled Task Creation",
+          "query": "EventID=1 AND Image='*\\schtasks.exe' AND CommandLine contains '/create'",
+          "confidence": "Medium",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml"
+        }
+      ]
+    }
+  },
+  "T1505.003": {
+    "tactic": "persistence",
+    "name": "Server Software Component: Web Shell",
+    "rules": {
+      "Suricata": [
+        {
+          "name": "Web Shell Upload Detection",
+          "sid": 1000010,
+          "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Possible Web Shell Upload\"; content:\"POST\"; http_method; fileext:\"aspx|jsp|php\"; sid:1000010;)",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Sysmon": [
+        {
+          "name": "Web Shell File Created by IIS",
+          "event_id": 11,
+          "query": "EventID=11 AND Image='*\\w3wp.exe' AND TargetFilename='*.aspx'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Webshell Creation",
+          "query": "EventID=11 AND Image='*\\w3wp.exe' AND TargetFilename='*\\.aspx'",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml"
+        }
+      ]
+    }
+  },
+  "T1068": {
+    "tactic": "privilege-escalation",
+    "name": "Exploitation for Privilege Escalation",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "Spoolsv Suspicious Child Process",
+          "event_id": 1,
+          "query": "EventID=1 AND ParentImage='*\\spoolsv.exe' AND Image='*\\cmd.exe'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Exploitation for Privilege Escalation",
+          "query": "EventID=1 AND ParentImage='*\\spoolsv.exe' AND Image='*\\cmd.exe'",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml"
+        }
+      ]
+    }
+  },
+  "T1055.001": {
+    "tactic": "defense-evasion",
+    "name": "Process Injection: DLL Injection",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "CreateRemoteThread in svchost",
+          "event_id": 8,
+          "query": "EventID=8 AND TargetImage='*\\svchost.exe'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Process Injection - DLL Injection",
+          "query": "EventID=8 AND TargetImage='*\\svchost.exe'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ]
+    }
+  },
+  "T1070.001": {
+    "tactic": "defense-evasion",
+    "name": "Indicator Removal: Clear Windows Event Logs",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [],
+      "Wazuh": [
+        {
+          "name": "Windows Audit Log Cleared",
+          "rule_id": 100030,
+          "query": "<rule id=\"100030\" level=\"14\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">1102</field>\n</rule>",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Windows Event Log": [
+        {
+          "name": "Security Log Cleared (1102)",
+          "event_id": 1102,
+          "query": "EventID=1102",
+          "confidence": "High",
+          "reference": ""
+        },
+        {
+          "name": "System Log Cleared (104)",
+          "event_id": 104,
+          "query": "EventID=104",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Sigma": [
+        {
+          "name": "Windows Event Log Cleared",
+          "query": "EventID=1102 OR EventID=104",
+          "confidence": "High",
+          "reference": ""
+        }
+      ]
+    }
+  },
+  "T1218": {
+    "tactic": "defense-evasion",
+    "name": "System Binary Proxy Execution",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "LOLBin Execution Detected",
+          "event_id": 1,
+          "query": "EventID=1 AND (Image='*\\rundll32.exe' OR Image='*\\regsvr32.exe' OR Image='*\\mshta.exe')",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "System Binary Proxy Execution",
+          "query": "EventID=1 AND (Image='*\\rundll32.exe' OR Image='*\\regsvr32.exe')",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ]
+    }
+  },
+  "T1003.001": {
+    "tactic": "credential-access",
+    "name": "OS Credential Dumping: LSASS Memory",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "LSASS Process Access",
+          "event_id": 10,
+          "query": "EventID=10 AND TargetImage='*\\lsass.exe' AND GrantedAccess='0x1010'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [
+        {
+          "name": "LSASS Access Detected",
+          "rule_id": 100040,
+          "query": "<rule id=\"100040\" level=\"14\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetImage\">lsass.exe</field>\n  <field name=\"win.eventdata.GrantedAccess\">0x1010|0x1038</field>\n</rule>",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Windows Event Log": [
+        {
+          "name": "Sensitive Privilege Use (4673)",
+          "event_id": 4673,
+          "query": "EventID=4673 AND ProcessName contains lsass",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Sigma": [
+        {
+          "name": "LSASS Memory Dump",
+          "query": "EventID=10 AND TargetImage='*\\lsass.exe' AND GrantedAccess='0x1010'",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml"
+        }
+      ]
+    }
+  },
+  "T1550.002": {
+    "tactic": "lateral-movement",
+    "name": "Use Alternate Authentication Material: Pass the Hash",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [],
+      "Wazuh": [],
+      "Windows Event Log": [
+        {
+          "name": "Pass the Hash Logon (4624 Type 9)",
+          "event_id": 4624,
+          "query": "EventID=4624 AND LogonType=9 AND AuthenticationPackageName='Negotiate'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Sigma": [
+        {
+          "name": "Pass the Hash Activity",
+          "query": "EventID=4624 AND LogonType=9 AND AuthenticationPackageName='Negotiate'",
+          "confidence": "High",
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_pass_the_hash.yml"
+        }
+      ]
+    }
+  },
+  "T1071.004": {
+    "tactic": "command-and-control",
+    "name": "Application Layer Protocol: DNS",
+    "rules": {
+      "Suricata": [
+        {
+          "name": "DNS Tunneling - Suspicious Long Query",
+          "sid": 1000003,
+          "query": "alert dns $HOME_NET any -> $EXTERNAL_NET 53 (msg:\"Suspicious Long DNS Query\"; dsize:>100; sid:1000003;)",
+          "confidence": "Medium",
+          "reference": "https://rules.emergingthreats.net/"
+        }
+      ],
+      "Sysmon": [
+        {
+          "name": "DNS Query to Suspicious Domain",
+          "event_id": 22,
+          "query": "EventID=22 AND QueryName matches long/random patterns",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": []
+    }
+  },
+  "T1021.002": {
+    "tactic": "lateral-movement",
+    "name": "Remote Services: SMB/Windows Admin Shares",
+    "rules": {
+      "Suricata": [
+        {
+          "name": "SMB Lateral Movement",
+          "sid": 1000020,
+          "query": "alert tcp $HOME_NET any -> $HOME_NET 445 (msg:\"Internal SMB Traffic\"; flow:to_server; sid:1000020;)",
+          "confidence": "Low",
+          "reference": ""
+        }
+      ],
+      "Sysmon": [],
+      "Wazuh": [],
+      "Windows Event Log": [
+        {
+          "name": "Network Logon to Admin Share (4624 Type 3)",
+          "event_id": 4624,
+          "query": "EventID=4624 AND LogonType=3",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Sigma": []
+    }
+  },
+  "T1048": {
+    "tactic": "exfiltration",
+    "name": "Exfiltration Over Alternative Protocol",
+    "rules": {
+      "Suricata": [
+        {
+          "name": "Large Outbound Data Transfer",
+          "sid": 1000030,
+          "query": "alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:\"Large Outbound Transfer\"; dsize:>5000; flow:to_server; sid:1000030;)",
+          "confidence": "Low",
+          "reference": ""
+        }
+      ],
+      "Sysmon": [],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": []
+    }
+  },
+  "T1078": {
+    "tactic": "initial-access",
+    "name": "Valid Accounts",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [],
+      "Wazuh": [],
+      "Windows Event Log": [
+        {
+          "name": "Successful Logon After Multiple Failures",
+          "event_id": 4624,
+          "query": "EventID=4624 preceded by multiple EventID=4625",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Sigma": []
+    }
+  },
+  "T1547.001": {
+    "tactic": "persistence",
+    "name": "Boot or Logon Autostart Execution: Registry Run Keys",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "Registry Run Key Modification",
+          "event_id": 13,
+          "query": "EventID=13 AND TargetObject contains '\\CurrentVersion\\Run'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [
+        {
+          "name": "Run Key Registry Modified",
+          "rule_id": 100050,
+          "query": "<rule id=\"100050\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetObject\">CurrentVersion\\\\Run</field>\n</rule>",
+          "confidence": "High",
+          "reference": ""
+        }
+      ],
+      "Windows Event Log": [],
+      "Sigma": [
+        {
+          "name": "Registry Run Key Persistence",
+          "query": "EventID=13 AND TargetObject contains '\\CurrentVersion\\Run'",
+          "confidence": "High",
+          "reference": ""
+        }
+      ]
+    }
+  },
+  "T1082": {
+    "tactic": "discovery",
+    "name": "System Information Discovery",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "System Info Commands Execution",
+          "event_id": 1,
+          "query": "EventID=1 AND (Image='*\\systeminfo.exe' OR Image='*\\hostname.exe')",
+          "confidence": "Low",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": []
+    }
+  },
+  "T1074": {
+    "tactic": "collection",
+    "name": "Data Staged",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [
+        {
+          "name": "Suspicious Archive Creation",
+          "event_id": 1,
+          "query": "EventID=1 AND (Image='*\\rar.exe' OR Image='*\\7z.exe') AND CommandLine contains 'a'",
+          "confidence": "Medium",
+          "reference": ""
+        }
+      ],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": []
+    }
+  },
+  "T1486": {
+    "tactic": "impact",
+    "name": "Data Encrypted for Impact",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Mass File Rename/Encrypt Activity", "event_id": 11, "query": "EventID=11 AND TargetFilename matches encrypted extensions", "confidence": "High", "reference": ""}],
+      "Wazuh": [{"name": "Ransomware File Activity", "rule_id": 100060, "query": "<rule id=\"100060\" level=\"15\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetFilename\">.encrypted|.locked|.crypto</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Ransomware File Extension", "query": "EventID=11 AND TargetFilename='*.encrypted' OR '*.locked'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1110": {
+    "tactic": "credential-access",
+    "name": "Brute Force",
+    "rules": {
+      "Suricata": [{"name": "SSH Brute Force Attempt", "sid": 2001219, "query": "alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:\"SSH Brute Force\"; threshold:type both,track by_src,count 5,seconds 60; sid:2001219;)", "confidence": "High", "reference": "https://rules.emergingthreats.net/"}],
+      "Sysmon": [],
+      "Wazuh": [{"name": "Multiple Authentication Failures", "rule_id": 5710, "query": "<rule id=\"5710\" level=\"10\" frequency=\"6\" timeframe=\"120\">\n  <if_matched_sid>5503</if_matched_sid>\n  <description>Multiple authentication failures</description>\n</rule>", "confidence": "High", "reference": "https://wazuh.com/"}],
+      "Windows Event Log": [{"name": "Account Lockout (4740)", "event_id": 4740, "query": "EventID=4740", "confidence": "High", "reference": ""}, {"name": "Multiple Failed Logons (4625)", "event_id": 4625, "query": "EventID=4625 COUNT > 5 within 60s", "confidence": "High", "reference": ""}],
+      "Sigma": [{"name": "Brute Force - Multiple Failed Logons", "query": "EventID=4625 | count() by TargetUserName > 5", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_susp_failed_logon_reasons.yml"}]
+    }
+  },
+  "T1555": {
+    "tactic": "credential-access",
+    "name": "Credentials from Password Stores",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Browser Credential File Access", "event_id": 1, "query": "EventID=1 AND CommandLine contains 'Login Data' OR 'logins.json'", "confidence": "Medium", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Browser Credential Store Access", "query": "EventID=1 AND (CommandLine contains 'Login Data' OR CommandLine contains 'cookies.sqlite')", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1136": {
+    "tactic": "persistence",
+    "name": "Create Account",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [],
+      "Wazuh": [{"name": "User Account Created", "rule_id": 5901, "query": "<rule id=\"5901\" level=\"8\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">4720</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [{"name": "User Account Created (4720)", "event_id": 4720, "query": "EventID=4720", "confidence": "High", "reference": ""}, {"name": "User Added to Admin Group (4732)", "event_id": 4732, "query": "EventID=4732 AND TargetSid contains 'S-1-5-32-544'", "confidence": "High", "reference": ""}],
+      "Sigma": [{"name": "Local User Creation", "query": "EventID=4720 OR (EventID=1 AND Image='*\\net.exe' AND CommandLine contains 'user /add')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1046": {
+    "tactic": "discovery",
+    "name": "Network Service Discovery",
+    "rules": {
+      "Suricata": [{"name": "Port Scan Detection", "sid": 2001569, "query": "alert tcp $HOME_NET any -> $HOME_NET any (msg:\"Internal Port Scan\"; flags:S; threshold:type both,track by_src,count 30,seconds 10; sid:2001569;)", "confidence": "Medium", "reference": ""}],
+      "Sysmon": [{"name": "Nmap Execution", "event_id": 1, "query": "EventID=1 AND (Image='*\\nmap.exe' OR CommandLine contains 'nmap')", "confidence": "High", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Network Scanning Tool Execution", "query": "EventID=1 AND (Image='*\\nmap.exe' OR Image='*\\masscan.exe')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1105": {
+    "tactic": "command-and-control",
+    "name": "Ingress Tool Transfer",
+    "rules": {
+      "Suricata": [{"name": "Suspicious File Download", "sid": 2001570, "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious EXE Download\"; fileext:\"exe\"; flow:to_client; sid:2001570;)", "confidence": "Medium", "reference": ""}],
+      "Sysmon": [{"name": "Certutil/BITSAdmin Download", "event_id": 1, "query": "EventID=1 AND (Image='*\\certutil.exe' AND CommandLine contains '-urlcache') OR (Image='*\\bitsadmin.exe' AND CommandLine contains '/transfer')", "confidence": "High", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Ingress Tool Transfer via LOLBin", "query": "EventID=1 AND (CommandLine contains 'certutil -urlcache' OR CommandLine contains 'bitsadmin /transfer')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1036": {
+    "tactic": "defense-evasion",
+    "name": "Masquerading",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Process Running from Suspicious Path", "event_id": 1, "query": "EventID=1 AND (Image contains '\\Temp\\' OR Image contains '\\AppData\\') AND (OriginalFileName='cmd.exe' OR OriginalFileName='powershell.exe')", "confidence": "Medium", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Masquerading - Renamed System Binary", "query": "EventID=1 AND OriginalFileName!=Image basename", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1027": {
+    "tactic": "defense-evasion",
+    "name": "Obfuscated Files or Information",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Base64 Encoded PowerShell", "event_id": 1, "query": "EventID=1 AND Image='*\\powershell.exe' AND CommandLine contains '-enc'", "confidence": "High", "reference": ""}],
+      "Wazuh": [{"name": "Encoded PowerShell Execution", "rule_id": 100070, "query": "<rule id=\"100070\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.CommandLine\">-enc|-encodedcommand</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [{"name": "Script Block with Suspicious Content (4104)", "event_id": 4104, "query": "EventID=4104 AND ScriptBlockText contains base64 or encoded strings", "confidence": "High", "reference": ""}],
+      "Sigma": [{"name": "Encoded PowerShell Command", "query": "EventID=1 AND CommandLine contains '-enc' OR '-encodedcommand'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1204.002": {
+    "tactic": "execution",
+    "name": "User Execution: Malicious File",
+    "rules": {
+      "Suricata": [{"name": "Suspicious File Download via HTTP", "sid": 2001571, "query": "alert http any any -> $HOME_NET any (msg:\"Suspicious File Download\"; fileext:\"scr|hta|vbs\"; sid:2001571;)", "confidence": "Medium", "reference": ""}],
+      "Sysmon": [{"name": "Suspicious File Execution from Download", "event_id": 1, "query": "EventID=1 AND Image matches '\\Downloads\\*.exe' OR '\\Temp\\*.exe'", "confidence": "Medium", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Execution from Suspicious Directory", "query": "EventID=1 AND Image contains '\\Downloads\\' OR '\\Temp\\'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1047": {
+    "tactic": "execution",
+    "name": "Windows Management Instrumentation",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "WMI Process Creation", "event_id": 1, "query": "EventID=1 AND ParentImage='*\\WmiPrvSE.exe'", "confidence": "High", "reference": ""}],
+      "Wazuh": [{"name": "WMI Remote Execution", "rule_id": 100071, "query": "<rule id=\"100071\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.ParentImage\">WmiPrvSE.exe</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "WMI Spawning Process", "query": "EventID=1 AND ParentImage='*\\WmiPrvSE.exe'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1021.001": {
+    "tactic": "lateral-movement",
+    "name": "Remote Services: Remote Desktop Protocol",
+    "rules": {
+      "Suricata": [{"name": "RDP Connection to Internal Host", "sid": 2001572, "query": "alert tcp any any -> $HOME_NET 3389 (msg:\"RDP Connection\"; flow:to_server; sid:2001572;)", "confidence": "Low", "reference": ""}],
+      "Sysmon": [{"name": "RDP Client Execution", "event_id": 3, "query": "EventID=3 AND DestinationPort=3389", "confidence": "Medium", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [{"name": "RDP Logon (4624 Type 10)", "event_id": 4624, "query": "EventID=4624 AND LogonType=10", "confidence": "High", "reference": ""}],
+      "Sigma": [{"name": "RDP Session Logon", "query": "EventID=4624 AND LogonType=10", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1489": {
+    "tactic": "impact",
+    "name": "Service Stop",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Service Stopped via net/sc", "event_id": 1, "query": "EventID=1 AND (Image='*\\net.exe' OR Image='*\\sc.exe') AND CommandLine contains 'stop'", "confidence": "Medium", "reference": ""}],
+      "Wazuh": [{"name": "Critical Service Stopped", "rule_id": 100072, "query": "<rule id=\"100072\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">7036</field>\n  <field name=\"win.eventdata.param2\">stopped</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [{"name": "Service State Change (7036)", "event_id": 7036, "query": "EventID=7036 AND param2='stopped'", "confidence": "Medium", "reference": ""}],
+      "Sigma": [{"name": "Service Stop via Command Line", "query": "EventID=1 AND CommandLine contains 'net stop' OR 'sc stop'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1490": {
+    "tactic": "impact",
+    "name": "Inhibit System Recovery",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "VSS Deletion / bcdedit", "event_id": 1, "query": "EventID=1 AND (CommandLine contains 'vssadmin delete shadows' OR CommandLine contains 'bcdedit /set' OR CommandLine contains 'wbadmin delete')", "confidence": "High", "reference": ""}],
+      "Wazuh": [{"name": "Shadow Copy Deletion", "rule_id": 100073, "query": "<rule id=\"100073\" level=\"15\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.CommandLine\">vssadmin.*delete|bcdedit.*/set.*recoveryenabled.*no</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Shadow Copy Deletion", "query": "EventID=1 AND CommandLine contains 'vssadmin delete shadows'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1543.003": {
+    "tactic": "persistence",
+    "name": "Create or Modify System Process: Windows Service",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "New Service Installation", "event_id": 1, "query": "EventID=1 AND Image='*\\sc.exe' AND CommandLine contains 'create'", "confidence": "Medium", "reference": ""}],
+      "Wazuh": [{"name": "Service Created", "rule_id": 100074, "query": "<rule id=\"100074\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">7045</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Windows Event Log": [{"name": "New Service Installed (7045)", "event_id": 7045, "query": "EventID=7045", "confidence": "High", "reference": ""}],
+      "Sigma": [{"name": "Suspicious Service Installation", "query": "EventID=7045 AND ServiceFileName contains 'cmd' OR 'powershell'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1112": {
+    "tactic": "defense-evasion",
+    "name": "Modify Registry",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Registry Value Set", "event_id": 13, "query": "EventID=13", "confidence": "Low", "reference": ""}],
+      "Wazuh": [{"name": "Registry Key Modified", "rule_id": 100075, "query": "<rule id=\"100075\" level=\"6\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">4657</field>\n</rule>", "confidence": "Medium", "reference": ""}],
+      "Windows Event Log": [{"name": "Registry Value Modified (4657)", "event_id": 4657, "query": "EventID=4657", "confidence": "Medium", "reference": ""}],
+      "Sigma": [{"name": "Suspicious Registry Modification", "query": "EventID=13 AND TargetObject contains 'Run' OR 'Services'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  },
+  "T1033": {
+    "tactic": "discovery",
+    "name": "System Owner/User Discovery",
+    "rules": {
+      "Suricata": [],
+      "Sysmon": [{"name": "Whoami Execution", "event_id": 1, "query": "EventID=1 AND Image='*\\whoami.exe'", "confidence": "Low", "reference": ""}],
+      "Wazuh": [],
+      "Windows Event Log": [],
+      "Sigma": [{"name": "Whoami Execution", "query": "EventID=1 AND Image='*\\whoami.exe'", "confidence": "Low", "reference": "https://github.com/SigmaHQ/sigma"}]
+    }
+  }
+}

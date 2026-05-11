@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test CORS</title></head>
+<body>
+    <div id="res"></div>
+    <script>
+        fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=en&dt=t&q=xin%20chao')
+        .then(res => res.json())
+        .then(data => document.getElementById('res').innerText = JSON.stringify(data))
+        .catch(err => document.getElementById('res').innerText = 'CORS error: ' + err);
+    </script>
+</body>
+</html>
