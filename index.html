@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="src/css/style.css?v=6">
+    <link rel="stylesheet" href="src/css/scenarios.css?v=1">
 </head>
 <body>
 
@@ -76,6 +77,52 @@
                             </button>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Kịch Bản Section -->
+            <section class="scenario-section" id="scenarioSection" style="display:none;">
+                <div class="scenario-section-header">
+                    <div class="scenario-title-group">
+                        <div class="scenario-title-icon"><i class="fa-solid fa-book-journal-whills"></i></div>
+                        <div class="scenario-title-text">
+                            <h2>Kịch Bản Diễn Tập <span class="scenario-count-badge" id="scenarioCountBadge">0 kịch bản</span></h2>
+                            <p>Duyệt và sử dụng kịch bản tấn công ART / CALDERA</p>
+                        </div>
+                    </div>
+                    <div class="scenario-actions">
+                        <button class="btn btn-ghost" onclick="ScenariosManager.refresh()"><i class="fa-solid fa-rotate-right"></i> Làm Mới</button>
+                        <button class="scenario-close-btn" onclick="ScenariosManager.hide()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="scenario-filters">
+                    <button class="scenario-filter-btn active" data-filter="all">Tất cả</button>
+                    <button class="scenario-filter-btn" data-filter="art">ART</button>
+                    <button class="scenario-filter-btn" data-filter="caldera">CALDERA</button>
+                    <button class="scenario-filter-btn" data-filter="custom">Custom</button>
+                </div>
+                <!-- Loading skeleton -->
+                <div id="scenarioLoading" class="scenario-skeleton-grid" style="display:none;">
+                    <div class="scenario-skeleton-card"><div class="skeleton-line badge"></div><div class="skeleton-line w80"></div><div class="skeleton-line w100"></div><div class="skeleton-line w60 short"></div><div class="skeleton-line w40 short"></div></div>
+                    <div class="scenario-skeleton-card"><div class="skeleton-line badge"></div><div class="skeleton-line w80"></div><div class="skeleton-line w100"></div><div class="skeleton-line w60 short"></div><div class="skeleton-line w40 short"></div></div>
+                    <div class="scenario-skeleton-card"><div class="skeleton-line badge"></div><div class="skeleton-line w80"></div><div class="skeleton-line w100"></div><div class="skeleton-line w60 short"></div><div class="skeleton-line w40 short"></div></div>
+                </div>
+                <!-- Card grid -->
+                <div id="scenarioGrid" class="scenario-grid"></div>
+                <!-- Empty state -->
+                <div id="scenarioEmpty" class="scenario-empty-state" style="display:none;">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <h3>Không có kịch bản nào</h3>
+                    <p>Thử làm mới hoặc tải lên kịch bản của bạn.</p>
+                </div>
+                <!-- Upload zone -->
+                <div class="scenario-upload-zone" id="scenarioUploadZone" style="margin-top:20px;">
+                    <input type="file" class="upload-input" id="scenarioUploadInput" accept=".yml,.yaml">
+                    <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div class="upload-text">Tải lên YAML của bạn</div>
+                    <div class="upload-hint">Kéo thả hoặc click — chấp nhận .yml / .yaml</div>
+                    <div class="upload-error" id="uploadError"></div>
+                    <div class="upload-success" id="uploadSuccess"></div>
                 </div>
             </section>
 
@@ -221,6 +268,24 @@
         </div>
     </div>
 
+    <!-- MODAL CHO SCENARIO DETAIL -->
+    <div id="scenarioDetailModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="scenarioModalTitle">Kịch Bản</h3>
+                <button id="closeScenarioModalBtn" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="scenarioModalBody" class="modal-content-body"></div>
+            <div class="scenario-modal-footer">
+                <button class="btn btn-ghost" onclick="document.getElementById('scenarioDetailModal').style.display='none'"><i class="fa-solid fa-xmark"></i> Đóng</button>
+                <button class="btn btn-use-scenario" id="scenarioModalUseBtn"><i class="fa-solid fa-play"></i> Dùng Kịch Bản Này</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
     <!-- SIDE DRAWER (Tính năng tương lai) -->
     <div id="sideDrawer" class="side-drawer">
         <div class="drawer-header">
@@ -239,13 +304,13 @@
                 <span class="dmi-badge">Sắp có</span>
             </div>
 
-            <div class="drawer-menu-item">
+            <div class="drawer-menu-item" onclick="ScenariosManager.showUpload(); closeDrawer();">
                 <i class="fa-solid fa-file-circle-plus"></i>
                 <div class="dmi-text">
                     <strong>Add Kịch bản</strong>
-                    <span>Tạo kịch bản diễn tập APT</span>
+                    <span>Tải lên kịch bản YAML của bạn</span>
                 </div>
-                <span class="dmi-badge">Sắp có</span>
+                <span class="dmi-badge" style="background:rgba(16,185,129,0.15);color:var(--green);border-color:rgba(16,185,129,0.3);">Mới</span>
             </div>
 
             <div class="drawer-menu-item">
@@ -257,13 +322,13 @@
                 <span class="dmi-badge">Sắp có</span>
             </div>
             
-            <div class="drawer-menu-item">
+            <div class="drawer-menu-item" onclick="ScenariosManager.show(); closeDrawer();">
                 <i class="fa-solid fa-book-journal-whills"></i>
                 <div class="dmi-text">
                     <strong>View Kịch bản</strong>
                     <span>Xem danh sách kịch bản hiện có</span>
                 </div>
-                <span class="dmi-badge">Sắp có</span>
+                <span class="dmi-badge" style="background:rgba(16,185,129,0.15);color:var(--green);border-color:rgba(16,185,129,0.3);">Mới</span>
             </div>
             <div class="drawer-menu-item">
                 <i class="fa-solid fa-book-journal-whills"></i>
@@ -278,6 +343,8 @@
     </div>
     <div id="drawerOverlay" class="drawer-overlay" style="display: none;"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="src/js/scenarios.js?v=1"></script>
     <script src="src/js/app.js?v=6"></script>
 </body>
 </html>
