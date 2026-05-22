@@ -1162,3 +1162,83 @@ function showResults() {
 // START
 // ============================================================
 init();
+
+// ── Handle ?from=scenario ─────────────────────────────────────
+(function checkScenarioImport() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') !== 'scenario') return;
+
+    // Clean URL ngay
+    window.history.replaceState({}, '', 'index.html');
+
+    // Hiển thị banner ngay lập tức để user biết đang xử lý
+    function showImportBanner(msg, color) {
+        let banner = document.getElementById('importBanner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'importBanner';
+            banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:9999;padding:12px 20px;
+                display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;
+                background:#0e1628;border-bottom:2px solid ${color};color:#e8edf6;
+                box-shadow:0 4px 20px rgba(0,0,0,0.4);`;
+            document.body.appendChild(banner);
+        }
+        banner.style.borderBottomColor = color;
+        banner.innerHTML = msg;
+    }
+    showImportBanner(
+        `<i class="fa-solid fa-circle-notch fa-spin" style="color:#60a5fa"></i> Đang tải kịch bản và chuẩn bị mapping...`,
+        '#3b82f6'
+    );
+
+    const raw = localStorage.getItem('sc_import');
+    if (!raw) return;
+
+    let data;
+    try { data = JSON.parse(raw); } catch(e) { return; }
+
+    // Kiểm tra TTL 60 giây
+    if (!data || Date.now() - (data.ts||0) > 60000) {
+        localStorage.removeItem('sc_import');
+        return;
+    }
+    localStorage.removeItem('sc_import');
+
+    const behaviors = data.behaviors || '';
+    if (!behaviors.trim()) return;
+
+    // Đợi DB load xong rồi populate + trigger
+    const MAX_WAIT = 15000;
+    const started = Date.now();
+    const waitAndPopulate = setInterval(() => {
+        if (Date.now() - started > MAX_WAIT) {
+            clearInterval(waitAndPopulate);
+            showImportBanner(`<i class="fa-solid fa-circle-exclamation" style="color:#f87171"></i> Không thể tải kịch bản — database load timeout`, '#ef4444');
+            setTimeout(() => { const b = document.getElementById('importBanner'); if(b) b.remove(); }, 4000);
+            return;
+        }
+        if (techniques.length === 0) return; // chưa load xong
+
+        clearInterval(waitAndPopulate);
+
+        // Cập nhật banner
+        showImportBanner(
+            `<i class="fa-solid fa-circle-check" style="color:#10b981"></i> Đã tải kịch bản: <strong style="color:#c084fc;margin-left:4px">${data.name||''}</strong> — đang mapping...`,
+            '#10b981'
+        );
+
+        // Điền vào textarea
+        aptInput.value = behaviors;
+        aptInput.disabled = false;
+        mapBtn.disabled = false;
+        clearBtn.disabled = false;
+        matrixBtn.disabled = false;
+
+        // Trigger mapping sau 300ms, dismiss banner sau 4s
+        setTimeout(() => {
+            mapBtn.click();
+            setTimeout(() => { const b = document.getElementById('importBanner'); if(b) { b.style.transition='opacity 0.4s'; b.style.opacity='0'; setTimeout(()=>b.remove(),400); } }, 4000);
+        }, 300);
+    }, 200);
+})();
+

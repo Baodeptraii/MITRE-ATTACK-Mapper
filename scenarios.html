@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quản lý kịch bản diễn tập APT — ART & CALDERA YAML scenarios với kill chain timeline và coverage analysis.">
+    <title>Kịch bản diễn tập — ATT&CK Mapper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="src/css/style.css?v=7">
+    <link rel="stylesheet" href="src/css/scenarios.css?v=4">
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div class="app-wrapper">
+
+        <!-- NAVBAR -->
+        <nav class="site-nav">
+            <a href="index.html" class="site-nav-brand">
+                <div class="nav-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                ATT&CK Mapper
+            </a>
+            <div class="site-nav-links">
+                <a href="index.html" class="site-nav-link"><i class="fa-solid fa-crosshairs"></i> Mapper</a>
+                <a href="scenarios.html" class="site-nav-link active"><i class="fa-solid fa-book-journal-whills"></i> Kịch bản</a>
+            </div>
+        </nav>
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <h1><i class="fa-solid fa-book-journal-whills"></i> Kịch bản diễn tập</h1>
+            <p>Duyệt, phân tích và sử dụng kịch bản tấn công ART / CALDERA cho diễn tập APT</p>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="scenario-toolbar" id="scenarioToolbar">
+            <div class="scenario-search" id="searchBox">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Tìm theo tên, T-code, tactic...">
+            </div>
+            <div class="scenario-filters" id="typeFilters">
+                <button class="scenario-filter-btn active" data-filter="all">Tất cả</button>
+                <button class="scenario-filter-btn" data-filter="ART">ART</button>
+                <button class="scenario-filter-btn" data-filter="CALDERA">CALDERA</button>
+            </div>
+            <div class="scenario-filters" id="platformFilters">
+                <button class="scenario-filter-btn active" data-platform="all">Mọi platform</button>
+                <button class="scenario-filter-btn" data-platform="windows">Windows</button>
+                <button class="scenario-filter-btn" data-platform="linux">Linux</button>
+            </div>
+            <div class="toolbar-actions">
+                <button class="btn btn-ghost" id="refreshBtn"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
+                <label class="btn btn-ghost" for="uploadInput" style="cursor:pointer;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload YAML</label>
+                <input type="file" id="uploadInput" accept=".yml,.yaml" style="display:none;">
+            </div>
+        </div>
+
+        <!-- LOADING SKELETON -->
+        <div id="scenarioLoading" class="scenario-skeleton-grid" style="display:none;">
+            <div class="scenario-skeleton-card"><div class="skeleton-line badge"></div><div class="skeleton-line w80"></div><div class="skeleton-line w100"></div><div class="skeleton-line w60 short"></div><div class="skeleton-line w40 short"></div></div>
+            <div class="scenario-skeleton-card"><div class="skeleton-line badge"></div><div class="skeleton-line w80"></div><div class="skeleton-line w100"></div><div class="skeleton-line w60 short"></div><div class="skeleton-line w40 short"></div></div>
+            <div class="scenario-skeleton-card"><div class="skeleton-line badge"></div><div class="skeleton-line w80"></div><div class="skeleton-line w100"></div><div class="skeleton-line w60 short"></div><div class="skeleton-line w40 short"></div></div>
+        </div>
+
+        <!-- CARD GRID -->
+        <div id="scenarioGrid" class="scenario-grid"></div>
+
+        <!-- EMPTY STATE -->
+        <div id="scenarioEmpty" class="scenario-empty-state" style="display:none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <h3>Không có kịch bản nào</h3>
+            <p>Thử làm mới hoặc tải lên kịch bản của bạn.</p>
+        </div>
+
+        <!-- UPLOAD ZONE -->
+        <div class="scenario-upload-zone" id="scenarioUploadZone">
+            <input type="file" class="upload-input" id="scenarioUploadInput" accept=".yml,.yaml">
+            <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div class="upload-text">Tải lên YAML của bạn</div>
+            <div class="upload-hint">Kéo thả hoặc click — chấp nhận .yml / .yaml</div>
+            <div class="upload-error" id="uploadError"></div>
+            <div class="upload-success" id="uploadSuccess"></div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <span>Dữ liệu từ <a href="https://attack.mitre.org" target="_blank">MITRE ATT&CK Enterprise</a> (STIX 2.1)</span>
+            <span class="footer-sep">•</span>
+            <span>Phục vụ diễn tập tấn công cho thao trường mạng & xây dựng kịch bản SOC</span>
+            <span>Github: <a href="https://github.com/Baodeptraii" target="_blank">@Baodeptraii</a></span>
+        </footer>
+    </div>
+
+    <!-- MODAL: SCENARIO DETAIL -->
+    <div id="scenarioDetailModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="scenarioModalTitle">Kịch bản</h3>
+                <button id="closeScenarioModalBtn" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="scenarioModalBody" class="modal-content-body"></div>
+            <div class="scenario-modal-footer">
+                <button class="btn btn-ghost" id="exportReportBtn"><i class="fa-solid fa-download"></i> Xuất YAML</button>
+                <button class="btn btn-ghost" onclick="document.getElementById('scenarioDetailModal').style.display='none'"><i class="fa-solid fa-xmark"></i> Đóng</button>
+                <button class="btn btn-use-scenario" id="scenarioModalUseBtn"><i class="fa-solid fa-crosshairs"></i> Kiểm tra mapping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="src/js/scenarios.js?v=5"></script>
+</body>
+</html>

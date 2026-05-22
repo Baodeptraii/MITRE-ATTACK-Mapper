@@ -20,6 +20,18 @@
 
     <div class="app-wrapper">
 
+        <!-- NAVBAR -->
+        <nav class="site-nav">
+            <a href="index.html" class="site-nav-brand">
+                <div class="nav-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                ATT&CK Mapper
+            </a>
+            <div class="site-nav-links">
+                <a href="index.html" class="site-nav-link active"><i class="fa-solid fa-crosshairs"></i> Mapper</a>
+                <a href="scenarios.html" class="site-nav-link"><i class="fa-solid fa-book-journal-whills"></i> Kịch bản</a>
+            </div>
+        </nav>
+
         <!-- HEADER -->
         <header class="header">
             <div class="header-logo">
@@ -66,7 +78,7 @@
                         </div>
                         <div class="input-actions">
                             <button id="matrixBtn" class="btn btn-ghost" disabled>
-                                <i class="fa-solid fa-table-cells"></i> Hiện Ma trận
+                                <i class="fa-solid fa-table-cells"></i> Hiện ma trận
                             </button>
                             <button id="clearBtn" class="btn btn-ghost" disabled>
                                 <i class="fa-solid fa-xmark"></i> Xóa
@@ -86,12 +98,12 @@
                     <div class="scenario-title-group">
                         <div class="scenario-title-icon"><i class="fa-solid fa-book-journal-whills"></i></div>
                         <div class="scenario-title-text">
-                            <h2>Kịch Bản Diễn Tập <span class="scenario-count-badge" id="scenarioCountBadge">0 kịch bản</span></h2>
+                            <h2>Kịch bản diễn tập <span class="scenario-count-badge" id="scenarioCountBadge">0 kịch bản</span></h2>
                             <p>Duyệt và sử dụng kịch bản tấn công ART / CALDERA</p>
                         </div>
                     </div>
                     <div class="scenario-actions">
-                        <button class="btn btn-ghost" onclick="ScenariosManager.refresh()"><i class="fa-solid fa-rotate-right"></i> Làm Mới</button>
+                        <button class="btn btn-ghost" onclick="ScenariosManager.refresh()"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
                         <button class="scenario-close-btn" onclick="ScenariosManager.hide()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
@@ -211,7 +223,7 @@
                 </div>
                 <h2>Sẵn sàng phân tích</h2>
                 <p>Nhập hành động của APT vào ô trên, mỗi dòng một hành động.<br>
-                Hệ thống sẽ tự động mapping ra Tactic, T-Code và kịch bản detection tương ứng.</p>
+                Hệ thống sẽ tự động mapping ra Tactic, T-Code và rule detection tương ứng.</p>
 
                 <!-- Quick examples -->
                 <div class="quick-examples">
@@ -238,7 +250,8 @@
         <footer class="footer">
             <span>Dữ liệu từ <a href="https://attack.mitre.org" target="_blank">MITRE ATT&CK Enterprise</a> (STIX 2.1)</span>
             <span class="footer-sep">•</span>
-            <span>Phục vụ diễn tập tấn công & xây dựng kịch bản SOC</span>
+            <span>Phục vụ diễn tập tấn công cho thao trường mạng & xây dựng kịch bản SOC</span>
+            <span>Github: <a href="https://github.com/Baodeptraii" target="_blank">@Baodeptraii</a></span>
         </footer>
     </div>
 
@@ -304,10 +317,10 @@
                 <span class="dmi-badge">Sắp có</span>
             </div>
 
-            <div class="drawer-menu-item" onclick="ScenariosManager.showUpload(); closeDrawer();">
+            <div class="drawer-menu-item" onclick="window.location.href='scenarios.html?action=upload'">
                 <i class="fa-solid fa-file-circle-plus"></i>
                 <div class="dmi-text">
-                    <strong>Add Kịch bản</strong>
+                    <strong>Upload Kịch bản</strong>
                     <span>Tải lên kịch bản YAML của bạn</span>
                 </div>
                 <span class="dmi-badge" style="background:rgba(16,185,129,0.15);color:var(--green);border-color:rgba(16,185,129,0.3);">Mới</span>
@@ -322,7 +335,7 @@
                 <span class="dmi-badge">Sắp có</span>
             </div>
             
-            <div class="drawer-menu-item" onclick="ScenariosManager.show(); closeDrawer();">
+            <div class="drawer-menu-item" onclick="window.location.href='scenarios.html'">
                 <i class="fa-solid fa-book-journal-whills"></i>
                 <div class="dmi-text">
                     <strong>View Kịch bản</strong>
@@ -336,7 +349,6 @@
                     <strong>View Stix </strong>
                     <a style="color: inherit; text-decoration: underline;" href="scratch/inspect_stix.html" target="_blank">Xem dữ liệu STIX</a>
                 </div>
-                <span class="dmi-badge">Sắp có</span>
             </div>
 
         </div>
@@ -344,7 +356,6 @@
     <div id="drawerOverlay" class="drawer-overlay" style="display: none;"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-    <script src="src/js/scenarios.js?v=1"></script>
-    <script src="src/js/app.js?v=6"></script>
+    <script src="src/js/app.js?v=8"></script>
 </body>
 </html>
