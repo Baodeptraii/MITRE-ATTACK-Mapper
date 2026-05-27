@@ -1,9 +1,10 @@
 {
   "_meta": {
-    "version": "1.0",
+    "version": "2.0",
     "description": "Standardized detection rules DB mapped by ATT&CK technique and tool",
     "tools": ["Suricata", "Sysmon", "Wazuh", "Windows Event Log", "Sigma"],
-    "updated": "2026-05-07"
+    "updated": "2026-05-27",
+    "sources": ["MITRE ATT&CK v15", "SigmaHQ", "Elastic Detection Rules", "Wazuh Documentation", "Emerging Threats"]
   },
   "T1566.001": {
     "tactic": "initial-access",
@@ -15,7 +16,13 @@
           "sid": 1000001,
           "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious Office File Download\"; fileext:\"docm\"; sid:1000001;)",
           "confidence": "Medium",
-          "reference": "https://rules.emergingthreats.net/"
+          "reference": "https://rules.emergingthreats.net/",
+          "platform": "network",
+          "data_source": "Suricata",
+          "description": "Detects HTTP download of macro-enabled Office documents (.docm) from external networks.",
+          "false_positive_note": "Legitimate business file downloads; tune by whitelisting known internal servers.",
+          "author": "Emerging Threats",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sysmon": [
@@ -24,7 +31,14 @@
           "event_id": 1,
           "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND (Image='*\\cmd.exe' OR Image='*\\powershell.exe')",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects Office app spawning cmd/powershell, indicating macro execution from phishing attachment.",
+          "tuning_hint": "Exclude legitimate Outlook automation from trusted add-ins.",
+          "false_positive_note": "Outlook integration with IT scripts; verify parent-child process chain.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [
@@ -33,7 +47,13 @@
           "rule_id": 100010,
           "query": "<rule id=\"100010\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.ParentImage\">OUTLOOK.EXE</field>\n  <field name=\"win.eventdata.Image\">cmd.exe|powershell.exe</field>\n</rule>",
           "confidence": "High",
-          "reference": "https://wazuh.com/"
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Wazuh rule detecting Outlook spawning shell processes via Sysmon EventID 1 forwarded logs.",
+          "tuning_hint": "Increase level to 14 for high-severity environments; add process exclusions via <field negate>.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [],
@@ -42,7 +62,12 @@
           "name": "Spearphishing Attachment Execution",
           "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\cmd.exe' OR Image='*\\powershell.exe'",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Sigma rule for detecting macro-based phishing attachment execution via Office shell spawn.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -58,7 +83,13 @@
           "event_id": 1,
           "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND (Image='*\\chrome.exe' OR Image='*\\msedge.exe')",
           "confidence": "Low",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects browser launched by Outlook, suggesting user clicked a spearphishing link in email.",
+          "false_positive_note": "Common in legitimate email workflows; corroborate with URL reputation.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -68,7 +99,12 @@
           "name": "Spearphishing Link Clicked",
           "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\chrome.exe' OR Image='*\\msedge.exe'",
           "confidence": "Low",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Low-confidence Sigma rule for browser launch from email client — correlate with proxy/URL logs.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -83,7 +119,13 @@
           "sid": 1000002,
           "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Log4j JNDI Attempt\"; content:\"${jndi:\"; sid:1000002;)",
           "confidence": "High",
-          "reference": "https://rules.emergingthreats.net/"
+          "reference": "https://rules.emergingthreats.net/",
+          "platform": "network",
+          "data_source": "Suricata",
+          "description": "Detects CVE-2021-44228 (Log4Shell) JNDI injection pattern in HTTP requests.",
+          "false_positive_note": "None expected — the ${jndi: pattern is not used in legitimate traffic.",
+          "author": "Emerging Threats",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sysmon": [],
@@ -93,7 +135,13 @@
           "rule_id": 100004,
           "query": "<rule id=\"100004\" level=\"12\">\n  <if_sid>31101</if_sid>\n  <regex>jndi:ldap</regex>\n</rule>",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Linux,Windows",
+          "data_source": "Wazuh",
+          "description": "Wazuh rule detecting Log4j JNDI LDAP pattern in web server access logs.",
+          "tuning_hint": "Expand regex to cover jndi:rmi and jndi:dns variants.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [],
@@ -111,14 +159,27 @@
           "event_id": 3,
           "query": "EventID=3 AND Image='*\\powershell.exe'",
           "confidence": "Medium",
-          "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003"
+          "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects PowerShell making outbound network connections — may indicate C2, download cradles, or exfiltration.",
+          "tuning_hint": "Whitelist known update servers and internal management IPs to reduce noise.",
+          "false_positive_note": "PowerShell-based admin tools (e.g., SCCM, Ansible) frequently generate network connections.",
+          "author": "Microsoft Sysmon",
+          "last_reviewed": "2026-05-27"
         },
         {
           "name": "Suspicious PowerShell CommandLine",
           "event_id": 1,
           "query": "EventID=1 AND Image='*\\powershell.exe' AND (CommandLine contains '-enc' OR CommandLine contains '-nop')",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects PowerShell with encoded (-enc) or no-profile (-nop) flags, commonly used in obfuscated malicious scripts.",
+          "tuning_hint": "Add -w hidden and bypass to the filter for broader coverage.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [
@@ -127,7 +188,13 @@
           "rule_id": 100002,
           "query": "<rule id=\"100002\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.scriptBlockText\">Invoke-Mimikatz|DownloadString</field>\n</rule>",
           "confidence": "High",
-          "reference": "https://wazuh.com/"
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Detects malicious PowerShell script block content (EventID 4104) forwarded via Wazuh agent.",
+          "tuning_hint": "Extend field regex with additional malicious cmdlets: Invoke-ReflectivePEInjection, IEX.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [
@@ -136,7 +203,13 @@
           "event_id": 4104,
           "query": "EventID=4104 AND ScriptBlockText contains suspicious patterns",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_logging_windows",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Native PowerShell script block logging (requires GPO: Turn on PowerShell Script Block Logging).",
+          "tuning_hint": "Enable in GPO: Computer Config > Admin Templates > Windows Components > PowerShell.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": [
@@ -144,7 +217,12 @@
           "name": "Suspicious PowerShell Execution",
           "query": "EventID=1 AND (CommandLine contains '-enc' OR CommandLine contains 'DownloadString')",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "High-coverage Sigma rule for detecting encoded PowerShell and download cradles.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -160,7 +238,13 @@
           "event_id": 1,
           "query": "EventID=1 AND Image='*\\cmd.exe' AND ParentImage NOT IN known_parents",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_cmd_suspicious_parent.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects cmd.exe launched from unusual parent processes such as web servers or Office apps.",
+          "tuning_hint": "Maintain a known-good parent process list; exclude explorer.exe, services.exe, svchost.exe.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [
@@ -169,7 +253,13 @@
           "rule_id": 100020,
           "query": "<rule id=\"100020\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.Image\">cmd.exe</field>\n  <field name=\"win.eventdata.ParentImage\" negate=\"yes\">explorer.exe</field>\n</rule>",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Wazuh rule flagging cmd.exe spawned by anything other than explorer.exe.",
+          "tuning_hint": "Expand negate list with legitimate parents: services.exe, svchost.exe, taskmgr.exe.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [],
@@ -178,7 +268,12 @@
           "name": "Suspicious Command Line Execution",
           "query": "EventID=1 AND Image='*\\cmd.exe' AND (CommandLine contains '/c' OR CommandLine contains '/k')",
           "confidence": "Low",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_cmd_suspicious_commandline.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Low-confidence rule; /c and /k flags are very common. Correlate with parent process and command content.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -194,7 +289,14 @@
           "event_id": 1,
           "query": "EventID=1 AND Image='*\\schtasks.exe' AND CommandLine contains '/create'",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects creation of scheduled tasks via schtasks.exe /create. Common persistence and lateral movement vector.",
+          "tuning_hint": "Correlate with /TR path pointing to temp/appdata directories for higher precision.",
+          "false_positive_note": "Software installers and sysadmin scripts frequently create scheduled tasks.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [
@@ -203,7 +305,13 @@
           "rule_id": 100003,
           "query": "<rule id=\"100003\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetObject\">*\\Schedule\\TaskCache\\Tasks\\*</field>\n</rule>",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Monitors the TaskCache registry hive for scheduled task creation or modification.",
+          "tuning_hint": "Raise level to 12 in high-security environments. Baseline known tasks first.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [
@@ -212,7 +320,13 @@
           "event_id": 4698,
           "query": "EventID=4698",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4698",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Native Windows audit event for scheduled task creation. Requires Task Scheduler audit policy enabled.",
+          "tuning_hint": "Enable via: auditpol /set /subcategory:\"Other Object Access Events\" /success:enable",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": [
@@ -220,7 +334,12 @@
           "name": "Scheduled Task Creation",
           "query": "EventID=1 AND Image='*\\schtasks.exe' AND CommandLine contains '/create'",
           "confidence": "Medium",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Sigma rule for detecting scheduled task creation via schtasks command.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -235,7 +354,13 @@
           "sid": 1000010,
           "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Possible Web Shell Upload\"; content:\"POST\"; http_method; fileext:\"aspx|jsp|php\"; sid:1000010;)",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://rules.emergingthreats.net/",
+          "platform": "network",
+          "data_source": "Suricata",
+          "description": "Detects HTTP POST uploads of web shell file types (.aspx, .jsp, .php) to internal web servers.",
+          "false_positive_note": "Legitimate web app deployments; tune by restricting to unexpected upload paths.",
+          "author": "Emerging Threats",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sysmon": [
@@ -244,7 +369,13 @@
           "event_id": 11,
           "query": "EventID=11 AND Image='*\\w3wp.exe' AND TargetFilename='*.aspx'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects .aspx file creation by the IIS worker process (w3wp.exe). Very high-fidelity webshell indicator.",
+          "false_positive_note": "Deployment pipelines writing to IIS wwwroot; baseline known deploy paths.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -254,7 +385,12 @@
           "name": "Webshell Creation",
           "query": "EventID=11 AND Image='*\\w3wp.exe' AND TargetFilename='*\\.aspx'",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "High-confidence Sigma rule for webshell file creation by IIS worker process.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -270,7 +406,13 @@
           "event_id": 1,
           "query": "EventID=1 AND ParentImage='*\\spoolsv.exe' AND Image='*\\cmd.exe'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects cmd.exe spawned by spoolsv.exe — indicator of Print Spooler exploitation (CVE-2021-1675, PrintNightmare).",
+          "false_positive_note": "Rare in benign environments; very high confidence for exploitation attempts.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -280,7 +422,12 @@
           "name": "Exploitation for Privilege Escalation",
           "query": "EventID=1 AND ParentImage='*\\spoolsv.exe' AND Image='*\\cmd.exe'",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Sigma rule for Print Spooler privilege escalation via child process spawning.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -296,7 +443,14 @@
           "event_id": 8,
           "query": "EventID=8 AND TargetImage='*\\svchost.exe'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/create_remote_thread/create_remote_thread_win_susp_targets.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects CreateRemoteThread targeting svchost.exe — a common DLL injection indicator for code execution under a trusted process.",
+          "tuning_hint": "Correlate with Sysmon Event 7 (ImageLoad) for loaded DLL path verification.",
+          "false_positive_note": "Security products occasionally inject into svchost; maintain a known-good DLL list.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -306,7 +460,12 @@
           "name": "Process Injection - DLL Injection",
           "query": "EventID=8 AND TargetImage='*\\svchost.exe'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/create_remote_thread/create_remote_thread_win_susp_targets.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Sigma rule detecting DLL injection via CreateRemoteThread into svchost.exe.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -323,7 +482,13 @@
           "rule_id": 100030,
           "query": "<rule id=\"100030\" level=\"14\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">1102</field>\n</rule>",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Wazuh rule detecting Windows Security log clearing (EventID 1102) — strong indicator of attacker covering tracks.",
+          "false_positive_note": "Almost no false positives; log clearing is not a normal admin operation.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [
@@ -332,14 +497,24 @@
           "event_id": 1102,
           "query": "EventID=1102",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-1102",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Security Audit Log was cleared. Generated by wevtutil or any process calling ClearEventLog.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         },
         {
           "name": "System Log Cleared (104)",
           "event_id": 104,
           "query": "EventID=104",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=104",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "System Event Log was cleared. Paired with 1102 for complete log clearing detection.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": [
@@ -347,7 +522,12 @@
           "name": "Windows Event Log Cleared",
           "query": "EventID=1102 OR EventID=104",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_event_log_cleared.yml",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Detects clearing of Security or System event log. Near-zero false positive rate.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -363,7 +543,14 @@
           "event_id": 1,
           "query": "EventID=1 AND (Image='*\\rundll32.exe' OR Image='*\\regsvr32.exe' OR Image='*\\mshta.exe')",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_lolbin_execution.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects execution of signed LOLBins (rundll32, regsvr32, mshta) used to proxy malicious code and evade whitelisting.",
+          "tuning_hint": "Filter by CommandLine content — empty or URL-based arguments are most suspicious.",
+          "false_positive_note": "rundll32 and regsvr32 are legitimately used by many applications; context is key.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -373,7 +560,12 @@
           "name": "System Binary Proxy Execution",
           "query": "EventID=1 AND (Image='*\\rundll32.exe' OR Image='*\\regsvr32.exe')",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_lolbin_execution.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Sigma LOLBin rule; pair with CommandLine analysis for higher fidelity.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -389,7 +581,14 @@
           "event_id": 10,
           "query": "EventID=10 AND TargetImage='*\\lsass.exe' AND GrantedAccess='0x1010'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects suspicious process access to LSASS with 0x1010 access mask, used by Mimikatz and similar tools.",
+          "tuning_hint": "Also alert on 0x1038, 0x143A access flags. Add SourceImage filter to reduce noise from EDR processes.",
+          "false_positive_note": "Some EDR and AV products legitimately access LSASS; maintain an allow-list by SourceImage.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [
@@ -398,7 +597,13 @@
           "rule_id": 100040,
           "query": "<rule id=\"100040\" level=\"14\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetImage\">lsass.exe</field>\n  <field name=\"win.eventdata.GrantedAccess\">0x1010|0x1038</field>\n</rule>",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Wazuh rule for detecting LSASS process access with credential-dumping access flags.",
+          "tuning_hint": "Add negate on SourceImage for known security tools to reduce alert volume.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [
@@ -407,7 +612,12 @@
           "event_id": 4673,
           "query": "EventID=4673 AND ProcessName contains lsass",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4673",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Sensitive privilege use event; indicates privileged operation on LSASS which may include credential access.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": [
@@ -415,7 +625,12 @@
           "name": "LSASS Memory Dump",
           "query": "EventID=10 AND TargetImage='*\\lsass.exe' AND GrantedAccess='0x1010'",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "High-fidelity Sigma rule for LSASS credential dumping via process access flag inspection.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -433,7 +648,13 @@
           "event_id": 4624,
           "query": "EventID=4624 AND LogonType=9 AND AuthenticationPackageName='Negotiate'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4624",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Detects NewCredentials logon type (9) used in Pass-the-Hash and Pass-the-Ticket attacks with NTLM/Negotiate auth.",
+          "tuning_hint": "Correlate TargetUserName with known service accounts to reduce false positives.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": [
@@ -441,7 +662,12 @@
           "name": "Pass the Hash Activity",
           "query": "EventID=4624 AND LogonType=9 AND AuthenticationPackageName='Negotiate'",
           "confidence": "High",
-          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_pass_the_hash.yml"
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_pass_the_hash.yml",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Sigma rule for PtH detection via NewCredentials logon type.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -456,7 +682,13 @@
           "sid": 1000003,
           "query": "alert dns $HOME_NET any -> $EXTERNAL_NET 53 (msg:\"Suspicious Long DNS Query\"; dsize:>100; sid:1000003;)",
           "confidence": "Medium",
-          "reference": "https://rules.emergingthreats.net/"
+          "reference": "https://rules.emergingthreats.net/",
+          "platform": "network",
+          "data_source": "Suricata",
+          "description": "Detects unusually long DNS queries (>100 bytes) indicating DNS tunneling for C2 or data exfiltration.",
+          "tuning_hint": "Tune dsize threshold based on baseline DNS traffic; lower to >60 for stricter detection.",
+          "author": "Emerging Threats",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sysmon": [
@@ -465,7 +697,13 @@
           "event_id": 22,
           "query": "EventID=22 AND QueryName matches long/random patterns",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/dns_query/dns_query_win_susp_query_dl_execution.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects DNS queries to domains with high entropy or unusual length (DGA or DNS tunnel indicators).",
+          "tuning_hint": "Apply entropy scoring or regex for DGA-like patterns on QueryName.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -483,7 +721,14 @@
           "sid": 1000020,
           "query": "alert tcp $HOME_NET any -> $HOME_NET 445 (msg:\"Internal SMB Traffic\"; flow:to_server; sid:1000020;)",
           "confidence": "Low",
-          "reference": ""
+          "reference": "https://rules.emergingthreats.net/",
+          "platform": "network",
+          "data_source": "Suricata",
+          "description": "Low-confidence detection of internal SMB traffic on port 445, which may indicate lateral movement.",
+          "tuning_hint": "Narrow to unexpected source/destination pairs; exclude known file servers.",
+          "false_positive_note": "Extremely noisy in Windows environments. Correlate with auth events.",
+          "author": "Emerging Threats",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sysmon": [],
@@ -494,7 +739,13 @@
           "event_id": 4624,
           "query": "EventID=4624 AND LogonType=3",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4624",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Detects network logon (Type 3) used for SMB admin share access — a common lateral movement indicator.",
+          "tuning_hint": "Filter by TargetUserName excluding service accounts and known management tools.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": []
@@ -510,7 +761,14 @@
           "sid": 1000030,
           "query": "alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:\"Large Outbound Transfer\"; dsize:>5000; flow:to_server; sid:1000030;)",
           "confidence": "Low",
-          "reference": ""
+          "reference": "https://rules.emergingthreats.net/",
+          "platform": "network",
+          "data_source": "Suricata",
+          "description": "Detects abnormally large outbound TCP transfers that may indicate data exfiltration.",
+          "tuning_hint": "Pair with threat intelligence feeds; set baseline outbound transfer thresholds per host.",
+          "false_positive_note": "Very noisy; backup and update traffic frequently exceeds 5KB. Requires behavioral baselining.",
+          "author": "Emerging Threats",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sysmon": [],
@@ -532,7 +790,13 @@
           "event_id": 4624,
           "query": "EventID=4624 preceded by multiple EventID=4625",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4624",
+          "platform": "Windows",
+          "data_source": "Windows Event Log",
+          "description": "Detects successful logon following multiple failures, indicating successful brute force or credential stuffing.",
+          "tuning_hint": "Implement correlation rule: N failures within T seconds before success on same TargetUserName.",
+          "author": "Microsoft",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Sigma": []
@@ -549,7 +813,13 @@
           "event_id": 13,
           "query": "EventID=13 AND TargetObject contains '\\CurrentVersion\\Run'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/registry/registry_set_persistence_run_key.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects modification of registry Run keys used for persistence. Any new entry here runs at every user logon.",
+          "tuning_hint": "Baseline known software Run entries; alert on new TargetObject values not in whitelist.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [
@@ -558,7 +828,13 @@
           "rule_id": 100050,
           "query": "<rule id=\"100050\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetObject\">CurrentVersion\\\\Run</field>\n</rule>",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://documentation.wazuh.com/",
+          "platform": "Windows",
+          "data_source": "Wazuh",
+          "description": "Wazuh rule detecting writes to registry Run keys, a primary persistence mechanism.",
+          "tuning_hint": "Add RunOnce and RunServices to the regex for broader coverage.",
+          "author": "Wazuh",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Windows Event Log": [],
@@ -567,7 +843,12 @@
           "name": "Registry Run Key Persistence",
           "query": "EventID=13 AND TargetObject contains '\\CurrentVersion\\Run'",
           "confidence": "High",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/registry/registry_set_persistence_run_key.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Sigma rule for detecting Run key persistence — covers HKLM and HKCU locations.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ]
     }
@@ -583,7 +864,14 @@
           "event_id": 1,
           "query": "EventID=1 AND (Image='*\\systeminfo.exe' OR Image='*\\hostname.exe')",
           "confidence": "Low",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_system_info_discovery.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects execution of systeminfo.exe or hostname.exe, often used during post-exploitation discovery phase.",
+          "tuning_hint": "Correlate with other discovery commands (whoami, net user, ipconfig) within short time window.",
+          "false_positive_note": "Common in IT management and monitoring scripts.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -602,7 +890,14 @@
           "event_id": 1,
           "query": "EventID=1 AND (Image='*\\rar.exe' OR Image='*\\7z.exe') AND CommandLine contains 'a'",
           "confidence": "Medium",
-          "reference": ""
+          "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_compress_data_collection.yml",
+          "platform": "Windows",
+          "data_source": "Sysmon",
+          "description": "Detects use of rar.exe or 7z.exe to archive files, common for staging data prior to exfiltration.",
+          "tuning_hint": "Filter by archive destination path — unusual paths (Temp, AppData) are more suspicious.",
+          "false_positive_note": "Developers and backup tools commonly use 7z/rar.",
+          "author": "SigmaHQ",
+          "last_reviewed": "2026-05-27"
         }
       ],
       "Wazuh": [],
@@ -615,21 +910,21 @@
     "name": "Data Encrypted for Impact",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Mass File Rename/Encrypt Activity", "event_id": 11, "query": "EventID=11 AND TargetFilename matches encrypted extensions", "confidence": "High", "reference": ""}],
-      "Wazuh": [{"name": "Ransomware File Activity", "rule_id": 100060, "query": "<rule id=\"100060\" level=\"15\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetFilename\">.encrypted|.locked|.crypto</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Sysmon": [{"name": "Mass File Rename/Encrypt Activity", "event_id": 11, "query": "EventID=11 AND TargetFilename matches encrypted extensions", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects mass file creation with ransomware-typical extensions (.encrypted, .locked). High volume is key indicator.", "tuning_hint": "Set volume threshold; single file renames may be FP. Alert on >50 events in 60s.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "Ransomware File Activity", "rule_id": 100060, "query": "<rule id=\"100060\" level=\"15\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetFilename\">.encrypted|.locked|.crypto</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Wazuh FIM rule detecting file writes with ransomware extension patterns.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Ransomware File Extension", "query": "EventID=11 AND TargetFilename='*.encrypted' OR '*.locked'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Ransomware File Extension", "query": "EventID=11 AND TargetFilename='*.encrypted' OR '*.locked'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule detecting ransomware file extension writes.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1110": {
     "tactic": "credential-access",
     "name": "Brute Force",
     "rules": {
-      "Suricata": [{"name": "SSH Brute Force Attempt", "sid": 2001219, "query": "alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:\"SSH Brute Force\"; threshold:type both,track by_src,count 5,seconds 60; sid:2001219;)", "confidence": "High", "reference": "https://rules.emergingthreats.net/"}],
+      "Suricata": [{"name": "SSH Brute Force Attempt", "sid": 2001219, "query": "alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:\"SSH Brute Force\"; threshold:type both,track by_src,count 5,seconds 60; sid:2001219;)", "confidence": "High", "reference": "https://rules.emergingthreats.net/", "platform": "Linux,network", "data_source": "Suricata", "description": "Detects SSH brute force via threshold: 5 connections from same source in 60s.", "tuning_hint": "Lower count to 3 for stricter environments; whitelist known pentest IPs.", "author": "Emerging Threats", "last_reviewed": "2026-05-27"}],
       "Sysmon": [],
-      "Wazuh": [{"name": "Multiple Authentication Failures", "rule_id": 5710, "query": "<rule id=\"5710\" level=\"10\" frequency=\"6\" timeframe=\"120\">\n  <if_matched_sid>5503</if_matched_sid>\n  <description>Multiple authentication failures</description>\n</rule>", "confidence": "High", "reference": "https://wazuh.com/"}],
-      "Windows Event Log": [{"name": "Account Lockout (4740)", "event_id": 4740, "query": "EventID=4740", "confidence": "High", "reference": ""}, {"name": "Multiple Failed Logons (4625)", "event_id": 4625, "query": "EventID=4625 COUNT > 5 within 60s", "confidence": "High", "reference": ""}],
-      "Sigma": [{"name": "Brute Force - Multiple Failed Logons", "query": "EventID=4625 | count() by TargetUserName > 5", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_susp_failed_logon_reasons.yml"}]
+      "Wazuh": [{"name": "Multiple Authentication Failures", "rule_id": 5710, "query": "<rule id=\"5710\" level=\"10\" frequency=\"6\" timeframe=\"120\">\n  <if_matched_sid>5503</if_matched_sid>\n  <description>Multiple authentication failures</description>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows,Linux", "data_source": "Wazuh", "description": "Built-in Wazuh rule detecting 6+ auth failures within 120 seconds from same source.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
+      "Windows Event Log": [{"name": "Account Lockout (4740)", "event_id": 4740, "query": "EventID=4740", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4740", "platform": "Windows", "data_source": "Windows Event Log", "description": "Account lockout event; triggered after brute force threshold exceeded.", "author": "Microsoft", "last_reviewed": "2026-05-27"}, {"name": "Multiple Failed Logons (4625)", "event_id": 4625, "query": "EventID=4625 COUNT > 5 within 60s", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625", "platform": "Windows", "data_source": "Windows Event Log", "description": "Failed logon audit event; use count correlation for brute force detection.", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "Brute Force - Multiple Failed Logons", "query": "EventID=4625 | count() by TargetUserName > 5", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_susp_failed_logon_reasons.yml", "platform": "Windows", "data_source": "Windows Event Log", "description": "Aggregation-based Sigma rule for brute force: count 4625 events per user.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1555": {
@@ -637,10 +932,10 @@
     "name": "Credentials from Password Stores",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Browser Credential File Access", "event_id": 1, "query": "EventID=1 AND CommandLine contains 'Login Data' OR 'logins.json'", "confidence": "Medium", "reference": ""}],
+      "Sysmon": [{"name": "Browser Credential File Access", "event_id": 1, "query": "EventID=1 AND CommandLine contains 'Login Data' OR 'logins.json'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects access to browser credential stores (Chrome Login Data, Firefox logins.json).", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Browser Credential Store Access", "query": "EventID=1 AND (CommandLine contains 'Login Data' OR CommandLine contains 'cookies.sqlite')", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Browser Credential Store Access", "query": "EventID=1 AND (CommandLine contains 'Login Data' OR CommandLine contains 'cookies.sqlite')", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule for detecting credential theft from browser stores.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1136": {
@@ -649,31 +944,31 @@
     "rules": {
       "Suricata": [],
       "Sysmon": [],
-      "Wazuh": [{"name": "User Account Created", "rule_id": 5901, "query": "<rule id=\"5901\" level=\"8\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">4720</field>\n</rule>", "confidence": "High", "reference": ""}],
-      "Windows Event Log": [{"name": "User Account Created (4720)", "event_id": 4720, "query": "EventID=4720", "confidence": "High", "reference": ""}, {"name": "User Added to Admin Group (4732)", "event_id": 4732, "query": "EventID=4732 AND TargetSid contains 'S-1-5-32-544'", "confidence": "High", "reference": ""}],
-      "Sigma": [{"name": "Local User Creation", "query": "EventID=4720 OR (EventID=1 AND Image='*\\net.exe' AND CommandLine contains 'user /add')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Wazuh": [{"name": "User Account Created", "rule_id": 5901, "query": "<rule id=\"5901\" level=\"8\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">4720</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Detects new local user account creation via EventID 4720.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
+      "Windows Event Log": [{"name": "User Account Created (4720)", "event_id": 4720, "query": "EventID=4720", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4720", "platform": "Windows", "data_source": "Windows Event Log", "description": "A new user account was created. Any unexpected account creation is suspicious.", "author": "Microsoft", "last_reviewed": "2026-05-27"}, {"name": "User Added to Admin Group (4732)", "event_id": 4732, "query": "EventID=4732 AND TargetSid contains 'S-1-5-32-544'", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4732", "platform": "Windows", "data_source": "Windows Event Log", "description": "A member was added to the local Administrators group (SID S-1-5-32-544).", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "Local User Creation", "query": "EventID=4720 OR (EventID=1 AND Image='*\\net.exe' AND CommandLine contains 'user /add')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon,Windows Event Log", "description": "Detects new local user via native audit or net.exe command.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1046": {
     "tactic": "discovery",
     "name": "Network Service Discovery",
     "rules": {
-      "Suricata": [{"name": "Port Scan Detection", "sid": 2001569, "query": "alert tcp $HOME_NET any -> $HOME_NET any (msg:\"Internal Port Scan\"; flags:S; threshold:type both,track by_src,count 30,seconds 10; sid:2001569;)", "confidence": "Medium", "reference": ""}],
-      "Sysmon": [{"name": "Nmap Execution", "event_id": 1, "query": "EventID=1 AND (Image='*\\nmap.exe' OR CommandLine contains 'nmap')", "confidence": "High", "reference": ""}],
+      "Suricata": [{"name": "Port Scan Detection", "sid": 2001569, "query": "alert tcp $HOME_NET any -> $HOME_NET any (msg:\"Internal Port Scan\"; flags:S; threshold:type both,track by_src,count 30,seconds 10; sid:2001569;)", "confidence": "Medium", "reference": "https://rules.emergingthreats.net/", "platform": "network", "data_source": "Suricata", "description": "Detects internal port scanning via SYN flood threshold: 30 SYN packets in 10 seconds from same source.", "tuning_hint": "Adjust count/seconds based on normal network behavior. Exclude known vulnerability scanners.", "author": "Emerging Threats", "last_reviewed": "2026-05-27"}],
+      "Sysmon": [{"name": "Nmap Execution", "event_id": 1, "query": "EventID=1 AND (Image='*\\nmap.exe' OR CommandLine contains 'nmap')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects nmap.exe execution or nmap in CommandLine — direct indicator of network scanning.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Network Scanning Tool Execution", "query": "EventID=1 AND (Image='*\\nmap.exe' OR Image='*\\masscan.exe')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Network Scanning Tool Execution", "query": "EventID=1 AND (Image='*\\nmap.exe' OR Image='*\\masscan.exe')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects scanning tool execution (nmap, masscan) indicating reconnaissance activity.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1105": {
     "tactic": "command-and-control",
     "name": "Ingress Tool Transfer",
     "rules": {
-      "Suricata": [{"name": "Suspicious File Download", "sid": 2001570, "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious EXE Download\"; fileext:\"exe\"; flow:to_client; sid:2001570;)", "confidence": "Medium", "reference": ""}],
-      "Sysmon": [{"name": "Certutil/BITSAdmin Download", "event_id": 1, "query": "EventID=1 AND (Image='*\\certutil.exe' AND CommandLine contains '-urlcache') OR (Image='*\\bitsadmin.exe' AND CommandLine contains '/transfer')", "confidence": "High", "reference": ""}],
+      "Suricata": [{"name": "Suspicious File Download", "sid": 2001570, "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious EXE Download\"; fileext:\"exe\"; flow:to_client; sid:2001570;)", "confidence": "Medium", "reference": "https://rules.emergingthreats.net/", "platform": "network", "data_source": "Suricata", "description": "Detects HTTP delivery of .exe files from external networks to internal hosts.", "tuning_hint": "Combine with threat intel feed for URL/IP reputation scoring.", "author": "Emerging Threats", "last_reviewed": "2026-05-27"}],
+      "Sysmon": [{"name": "Certutil/BITSAdmin Download", "event_id": 1, "query": "EventID=1 AND (Image='*\\certutil.exe' AND CommandLine contains '-urlcache') OR (Image='*\\bitsadmin.exe' AND CommandLine contains '/transfer')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects LOLBin file download via certutil -urlcache or bitsadmin /transfer.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Ingress Tool Transfer via LOLBin", "query": "EventID=1 AND (CommandLine contains 'certutil -urlcache' OR CommandLine contains 'bitsadmin /transfer')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Ingress Tool Transfer via LOLBin", "query": "EventID=1 AND (CommandLine contains 'certutil -urlcache' OR CommandLine contains 'bitsadmin /transfer')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule for LOLBin-based file download for tool delivery.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1036": {
@@ -681,10 +976,10 @@
     "name": "Masquerading",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Process Running from Suspicious Path", "event_id": 1, "query": "EventID=1 AND (Image contains '\\Temp\\' OR Image contains '\\AppData\\') AND (OriginalFileName='cmd.exe' OR OriginalFileName='powershell.exe')", "confidence": "Medium", "reference": ""}],
+      "Sysmon": [{"name": "Process Running from Suspicious Path", "event_id": 1, "query": "EventID=1 AND (Image contains '\\Temp\\' OR Image contains '\\AppData\\') AND (OriginalFileName='cmd.exe' OR OriginalFileName='powershell.exe')", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects system binaries (cmd, powershell) running from temp directories — common masquerading technique.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Masquerading - Renamed System Binary", "query": "EventID=1 AND OriginalFileName!=Image basename", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Masquerading - Renamed System Binary", "query": "EventID=1 AND OriginalFileName!=Image basename", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects when process Image name differs from OriginalFileName PE field, indicating binary renaming.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1027": {
@@ -692,21 +987,21 @@
     "name": "Obfuscated Files or Information",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Base64 Encoded PowerShell", "event_id": 1, "query": "EventID=1 AND Image='*\\powershell.exe' AND CommandLine contains '-enc'", "confidence": "High", "reference": ""}],
-      "Wazuh": [{"name": "Encoded PowerShell Execution", "rule_id": 100070, "query": "<rule id=\"100070\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.CommandLine\">-enc|-encodedcommand</field>\n</rule>", "confidence": "High", "reference": ""}],
-      "Windows Event Log": [{"name": "Script Block with Suspicious Content (4104)", "event_id": 4104, "query": "EventID=4104 AND ScriptBlockText contains base64 or encoded strings", "confidence": "High", "reference": ""}],
-      "Sigma": [{"name": "Encoded PowerShell Command", "query": "EventID=1 AND CommandLine contains '-enc' OR '-encodedcommand'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sysmon": [{"name": "Base64 Encoded PowerShell", "event_id": 1, "query": "EventID=1 AND Image='*\\powershell.exe' AND CommandLine contains '-enc'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects PowerShell invoked with -enc flag for encoded command execution, a common obfuscation technique.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "Encoded PowerShell Execution", "rule_id": 100070, "query": "<rule id=\"100070\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.CommandLine\">-enc|-encodedcommand</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Wazuh rule detecting encoded PowerShell command execution.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
+      "Windows Event Log": [{"name": "Script Block with Suspicious Content (4104)", "event_id": 4104, "query": "EventID=4104 AND ScriptBlockText contains base64 or encoded strings", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_logging_windows", "platform": "Windows", "data_source": "Windows Event Log", "description": "Detects suspicious base64 or encoded content in PowerShell script blocks via EventID 4104.", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "Encoded PowerShell Command", "query": "EventID=1 AND CommandLine contains '-enc' OR '-encodedcommand'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule for detecting encoded PowerShell in process creation logs.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1204.002": {
     "tactic": "execution",
     "name": "User Execution: Malicious File",
     "rules": {
-      "Suricata": [{"name": "Suspicious File Download via HTTP", "sid": 2001571, "query": "alert http any any -> $HOME_NET any (msg:\"Suspicious File Download\"; fileext:\"scr|hta|vbs\"; sid:2001571;)", "confidence": "Medium", "reference": ""}],
-      "Sysmon": [{"name": "Suspicious File Execution from Download", "event_id": 1, "query": "EventID=1 AND Image matches '\\Downloads\\*.exe' OR '\\Temp\\*.exe'", "confidence": "Medium", "reference": ""}],
+      "Suricata": [{"name": "Suspicious File Download via HTTP", "sid": 2001571, "query": "alert http any any -> $HOME_NET any (msg:\"Suspicious File Download\"; fileext:\"scr|hta|vbs\"; sid:2001571;)", "confidence": "Medium", "reference": "https://rules.emergingthreats.net/", "platform": "network", "data_source": "Suricata", "description": "Detects download of suspicious executable file types (.scr, .hta, .vbs) commonly used in malware delivery.", "author": "Emerging Threats", "last_reviewed": "2026-05-27"}],
+      "Sysmon": [{"name": "Suspicious File Execution from Download", "event_id": 1, "query": "EventID=1 AND Image matches '\\Downloads\\*.exe' OR '\\Temp\\*.exe'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects executables running from Downloads or Temp folders — common for user-executed malware.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Execution from Suspicious Directory", "query": "EventID=1 AND Image contains '\\Downloads\\' OR '\\Temp\\'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Execution from Suspicious Directory", "query": "EventID=1 AND Image contains '\\Downloads\\' OR '\\Temp\\'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule for detecting process execution from user-writable directories.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1047": {
@@ -714,21 +1009,21 @@
     "name": "Windows Management Instrumentation",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "WMI Process Creation", "event_id": 1, "query": "EventID=1 AND ParentImage='*\\WmiPrvSE.exe'", "confidence": "High", "reference": ""}],
-      "Wazuh": [{"name": "WMI Remote Execution", "rule_id": 100071, "query": "<rule id=\"100071\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.ParentImage\">WmiPrvSE.exe</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Sysmon": [{"name": "WMI Process Creation", "event_id": 1, "query": "EventID=1 AND ParentImage='*\\WmiPrvSE.exe'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects processes spawned by WmiPrvSE.exe, indicating WMI-based lateral movement or execution.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "WMI Remote Execution", "rule_id": 100071, "query": "<rule id=\"100071\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.ParentImage\">WmiPrvSE.exe</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Wazuh rule detecting WMI-spawned child processes via ParentImage match.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
       "Windows Event Log": [],
-      "Sigma": [{"name": "WMI Spawning Process", "query": "EventID=1 AND ParentImage='*\\WmiPrvSE.exe'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "WMI Spawning Process", "query": "EventID=1 AND ParentImage='*\\WmiPrvSE.exe'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule for WMI process spawning detection.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1021.001": {
     "tactic": "lateral-movement",
     "name": "Remote Services: Remote Desktop Protocol",
     "rules": {
-      "Suricata": [{"name": "RDP Connection to Internal Host", "sid": 2001572, "query": "alert tcp any any -> $HOME_NET 3389 (msg:\"RDP Connection\"; flow:to_server; sid:2001572;)", "confidence": "Low", "reference": ""}],
-      "Sysmon": [{"name": "RDP Client Execution", "event_id": 3, "query": "EventID=3 AND DestinationPort=3389", "confidence": "Medium", "reference": ""}],
+      "Suricata": [{"name": "RDP Connection to Internal Host", "sid": 2001572, "query": "alert tcp any any -> $HOME_NET 3389 (msg:\"RDP Connection\"; flow:to_server; sid:2001572;)", "confidence": "Low", "reference": "https://rules.emergingthreats.net/", "platform": "network", "data_source": "Suricata", "description": "Detects RDP connections on port 3389. Low confidence — correlate with logon events for confirmation.", "author": "Emerging Threats", "last_reviewed": "2026-05-27"}],
+      "Sysmon": [{"name": "RDP Client Execution", "event_id": 3, "query": "EventID=3 AND DestinationPort=3389", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects outbound RDP connections via Sysmon network event (EventID 3).", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
-      "Windows Event Log": [{"name": "RDP Logon (4624 Type 10)", "event_id": 4624, "query": "EventID=4624 AND LogonType=10", "confidence": "High", "reference": ""}],
-      "Sigma": [{"name": "RDP Session Logon", "query": "EventID=4624 AND LogonType=10", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Windows Event Log": [{"name": "RDP Logon (4624 Type 10)", "event_id": 4624, "query": "EventID=4624 AND LogonType=10", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4624", "platform": "Windows", "data_source": "Windows Event Log", "description": "RDP (RemoteInteractive) logon type — high confidence indicator of interactive remote session.", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "RDP Session Logon", "query": "EventID=4624 AND LogonType=10", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Windows Event Log", "description": "Sigma rule for detecting RDP logon sessions via EventID 4624 LogonType=10.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1489": {
@@ -736,10 +1031,10 @@
     "name": "Service Stop",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Service Stopped via net/sc", "event_id": 1, "query": "EventID=1 AND (Image='*\\net.exe' OR Image='*\\sc.exe') AND CommandLine contains 'stop'", "confidence": "Medium", "reference": ""}],
-      "Wazuh": [{"name": "Critical Service Stopped", "rule_id": 100072, "query": "<rule id=\"100072\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">7036</field>\n  <field name=\"win.eventdata.param2\">stopped</field>\n</rule>", "confidence": "High", "reference": ""}],
-      "Windows Event Log": [{"name": "Service State Change (7036)", "event_id": 7036, "query": "EventID=7036 AND param2='stopped'", "confidence": "Medium", "reference": ""}],
-      "Sigma": [{"name": "Service Stop via Command Line", "query": "EventID=1 AND CommandLine contains 'net stop' OR 'sc stop'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sysmon": [{"name": "Service Stopped via net/sc", "event_id": 1, "query": "EventID=1 AND (Image='*\\net.exe' OR Image='*\\sc.exe') AND CommandLine contains 'stop'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects service stop commands via net.exe or sc.exe, commonly used by ransomware to disable AV/backup services.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "Critical Service Stopped", "rule_id": 100072, "query": "<rule id=\"100072\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">7036</field>\n  <field name=\"win.eventdata.param2\">stopped</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Wazuh rule alerting when Service Control Manager reports a service transition to stopped state.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
+      "Windows Event Log": [{"name": "Service State Change (7036)", "event_id": 7036, "query": "EventID=7036 AND param2='stopped'", "confidence": "Medium", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-7036", "platform": "Windows", "data_source": "Windows Event Log", "description": "Service Control Manager event for service state change. Monitor for critical service stops.", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "Service Stop via Command Line", "query": "EventID=1 AND CommandLine contains 'net stop' OR 'sc stop'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule detecting service stop commands via command line.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1490": {
@@ -747,10 +1042,10 @@
     "name": "Inhibit System Recovery",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "VSS Deletion / bcdedit", "event_id": 1, "query": "EventID=1 AND (CommandLine contains 'vssadmin delete shadows' OR CommandLine contains 'bcdedit /set' OR CommandLine contains 'wbadmin delete')", "confidence": "High", "reference": ""}],
-      "Wazuh": [{"name": "Shadow Copy Deletion", "rule_id": 100073, "query": "<rule id=\"100073\" level=\"15\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.CommandLine\">vssadmin.*delete|bcdedit.*/set.*recoveryenabled.*no</field>\n</rule>", "confidence": "High", "reference": ""}],
+      "Sysmon": [{"name": "VSS Deletion / bcdedit", "event_id": 1, "query": "EventID=1 AND (CommandLine contains 'vssadmin delete shadows' OR CommandLine contains 'bcdedit /set' OR CommandLine contains 'wbadmin delete')", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects shadow copy deletion and backup disabling via vssadmin, bcdedit, or wbadmin — ransomware pre-encryption step.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "Shadow Copy Deletion", "rule_id": 100073, "query": "<rule id=\"100073\" level=\"15\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.CommandLine\">vssadmin.*delete|bcdedit.*/set.*recoveryenabled.*no</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Critical-level Wazuh rule detecting shadow copy deletion commands.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Shadow Copy Deletion", "query": "EventID=1 AND CommandLine contains 'vssadmin delete shadows'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Shadow Copy Deletion", "query": "EventID=1 AND CommandLine contains 'vssadmin delete shadows'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Sigma rule for vssadmin shadow copy deletion, a near-certain ransomware indicator.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1543.003": {
@@ -758,10 +1053,10 @@
     "name": "Create or Modify System Process: Windows Service",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "New Service Installation", "event_id": 1, "query": "EventID=1 AND Image='*\\sc.exe' AND CommandLine contains 'create'", "confidence": "Medium", "reference": ""}],
-      "Wazuh": [{"name": "Service Created", "rule_id": 100074, "query": "<rule id=\"100074\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">7045</field>\n</rule>", "confidence": "High", "reference": ""}],
-      "Windows Event Log": [{"name": "New Service Installed (7045)", "event_id": 7045, "query": "EventID=7045", "confidence": "High", "reference": ""}],
-      "Sigma": [{"name": "Suspicious Service Installation", "query": "EventID=7045 AND ServiceFileName contains 'cmd' OR 'powershell'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sysmon": [{"name": "New Service Installation", "event_id": 1, "query": "EventID=1 AND Image='*\\sc.exe' AND CommandLine contains 'create'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects new Windows service creation via sc.exe, commonly used for persistence.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "Service Created", "rule_id": 100074, "query": "<rule id=\"100074\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">7045</field>\n</rule>", "confidence": "High", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Wazuh rule detecting new service installation via EventID 7045.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
+      "Windows Event Log": [{"name": "New Service Installed (7045)", "event_id": 7045, "query": "EventID=7045", "confidence": "High", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-7045", "platform": "Windows", "data_source": "Windows Event Log", "description": "A new service was installed. Investigate ServiceFileName for suspicious paths.", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "Suspicious Service Installation", "query": "EventID=7045 AND ServiceFileName contains 'cmd' OR 'powershell'", "confidence": "High", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Windows Event Log", "description": "High-confidence Sigma rule for services installed with cmd/powershell payloads.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1112": {
@@ -769,10 +1064,10 @@
     "name": "Modify Registry",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Registry Value Set", "event_id": 13, "query": "EventID=13", "confidence": "Low", "reference": ""}],
-      "Wazuh": [{"name": "Registry Key Modified", "rule_id": 100075, "query": "<rule id=\"100075\" level=\"6\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">4657</field>\n</rule>", "confidence": "Medium", "reference": ""}],
-      "Windows Event Log": [{"name": "Registry Value Modified (4657)", "event_id": 4657, "query": "EventID=4657", "confidence": "Medium", "reference": ""}],
-      "Sigma": [{"name": "Suspicious Registry Modification", "query": "EventID=13 AND TargetObject contains 'Run' OR 'Services'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sysmon": [{"name": "Registry Value Set", "event_id": 13, "query": "EventID=13", "confidence": "Low", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Generic registry value write event. Very noisy — must be filtered by TargetObject path.", "tuning_hint": "Restrict to specific TargetObject paths: Run, Services, Policies, SecurityProviders.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
+      "Wazuh": [{"name": "Registry Key Modified", "rule_id": 100075, "query": "<rule id=\"100075\" level=\"6\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.system.eventID\">4657</field>\n</rule>", "confidence": "Medium", "reference": "https://documentation.wazuh.com/", "platform": "Windows", "data_source": "Wazuh", "description": "Wazuh rule for registry modification events (EventID 4657). Requires registry auditing enabled.", "author": "Wazuh", "last_reviewed": "2026-05-27"}],
+      "Windows Event Log": [{"name": "Registry Value Modified (4657)", "event_id": 4657, "query": "EventID=4657", "confidence": "Medium", "reference": "https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4657", "platform": "Windows", "data_source": "Windows Event Log", "description": "Registry object modified. Requires audit policy: Object Access > Audit Registry.", "author": "Microsoft", "last_reviewed": "2026-05-27"}],
+      "Sigma": [{"name": "Suspicious Registry Modification", "query": "EventID=13 AND TargetObject contains 'Run' OR 'Services'", "confidence": "Medium", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects registry writes to persistence-related keys.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   },
   "T1033": {
@@ -780,10 +1075,10 @@
     "name": "System Owner/User Discovery",
     "rules": {
       "Suricata": [],
-      "Sysmon": [{"name": "Whoami Execution", "event_id": 1, "query": "EventID=1 AND Image='*\\whoami.exe'", "confidence": "Low", "reference": ""}],
+      "Sysmon": [{"name": "Whoami Execution", "event_id": 1, "query": "EventID=1 AND Image='*\\whoami.exe'", "confidence": "Low", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Detects whoami.exe execution used in post-exploitation to identify current user context.", "tuning_hint": "Correlate with other discovery commands to raise confidence.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}],
       "Wazuh": [],
       "Windows Event Log": [],
-      "Sigma": [{"name": "Whoami Execution", "query": "EventID=1 AND Image='*\\whoami.exe'", "confidence": "Low", "reference": "https://github.com/SigmaHQ/sigma"}]
+      "Sigma": [{"name": "Whoami Execution", "query": "EventID=1 AND Image='*\\whoami.exe'", "confidence": "Low", "reference": "https://github.com/SigmaHQ/sigma", "platform": "Windows", "data_source": "Sysmon", "description": "Low-confidence but useful for correlation; combine with net user, systeminfo events.", "author": "SigmaHQ", "last_reviewed": "2026-05-27"}]
     }
   }
 }

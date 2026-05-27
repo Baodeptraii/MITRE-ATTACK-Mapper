@@ -755,13 +755,38 @@ function showToolDetail(data) {
         .map(c => `<span class="component-tag">${c}</span>`)
         .join('');
 
-    const ruleHtml = data.hasRule
-        ? `<div class="modal-rule-info">
-               <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
-               <strong>${data.ruleCount} detection rule(s) có sẵn</strong>
-               ${data.firstRule ? `<div class="rule-name">→ ${data.firstRule}</div>` : ''}
-           </div>`
-        : `<div class="modal-rule-info no-rule">
+    const detEntry = detectionRulesDb[data.techId] || {};
+    const rules = detEntry.rules?.[data.toolId] || [];
+
+    let ruleHtml;
+    if (rules.length > 0) {
+        const ruleDetails = rules.map(rule => {
+            const parts = [];
+            if (rule.name) parts.push(`<div class="rule-name">→ ${rule.name}</div>`);
+            if (rule.description) parts.push(`<div class="rule-desc">${escHtml(rule.description)}</div>`);
+            if (rule.query) parts.push(`<pre class="rule-query">${escHtml(rule.query)}</pre>`);
+            if (rule.sid || rule.rule_id || rule.event_id) {
+                const ids = [];
+                if (rule.sid) ids.push(`SID: ${rule.sid}`);
+                if (rule.rule_id) ids.push(`Rule ID: ${rule.rule_id}`);
+                if (rule.event_id) ids.push(`Event ID: ${rule.event_id}`);
+                parts.push(`<div class="rule-meta">${ids.join(' • ')}</div>`);
+            }
+            if (rule.reference) {
+                parts.push(`<p><a href="${rule.reference}" target="_blank" class="rule-ref">Xem Reference</a></p>`);
+            }
+            return `<div class="rule-detail">${parts.join('')}</div>`;
+        }).join('<hr class="rule-separator">');
+
+        ruleHtml = `
+            <div class="modal-rule-info">
+                <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+                <strong>${rules.length} detection rule(s) có sẵn</strong>
+            </div>
+            ${ruleDetails}
+        `;
+    } else {
+        ruleHtml = `<div class="modal-rule-info no-rule">
                <i class="fa-regular fa-circle" style="color:var(--blue-lt)"></i>
                <strong>Chưa có rule trong database</strong>
                <div class="rule-hint">
@@ -769,6 +794,7 @@ function showToolDetail(data) {
                    <strong>${data.techId}</strong> thông qua các log sau:
                </div>
            </div>`;
+    }
 
     modal.querySelector('.modal-tool-name').textContent = data.toolId;
     modal.querySelector('.modal-tech-id').textContent   = data.techId;

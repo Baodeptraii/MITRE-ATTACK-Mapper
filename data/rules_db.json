@@ -5,14 +5,36 @@
       "name": "Spearphishing Attachment Execution",
       "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\cmd.exe' OR Image='*\\powershell.exe'",
       "confidence": "High",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_creation",
+      "description": "Detects when Outlook spawns cmd.exe or powershell.exe, indicating macro-based spearphishing attachment execution.",
+      "tags": ["phishing", "initial-access", "office", "macro"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     },
     {
       "source": "Suricata",
       "name": "Suspicious Office Document Download",
       "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Suspicious Office File Download\"; fileext:\"docm\"; sid:1000001;)",
       "confidence": "Medium",
-      "reference": "https://rules.emergingthreats.net/"
+      "severity": "Medium",
+      "status": "verified",
+      "rule_format": "Suricata",
+      "data_category": "Network",
+      "reference": "https://rules.emergingthreats.net/",
+      "platform": "network",
+      "data_source": "Suricata",
+      "rule_type": "network",
+      "description": "Detects download of macro-enabled Office documents (.docm) from external networks via HTTP.",
+      "tags": ["phishing", "initial-access", "document", "macro"],
+      "last_updated": "2026-05-27",
+      "author": "Emerging Threats"
     }
   ],
   "T1566.002": [
@@ -21,7 +43,18 @@
       "name": "Spearphishing Link Clicked",
       "query": "EventID=1 AND ParentImage='*\\OUTLOOK.EXE' AND Image='*\\chrome.exe' OR Image='*\\msedge.exe'",
       "confidence": "Low",
-      "reference": ""
+      "severity": "Low",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_office_shell.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_creation",
+      "description": "Detects when Outlook spawns a browser, suggesting the user clicked a spearphishing link in an email.",
+      "tags": ["phishing", "initial-access", "email", "browser"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ],
   "T1059.001": [
@@ -30,21 +63,54 @@
       "name": "Suspicious PowerShell Execution",
       "query": "EventID=1 AND (CommandLine contains '-enc' OR CommandLine contains 'DownloadString')",
       "confidence": "High",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_powershell_suspicious_parameter.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_creation",
+      "description": "Detects PowerShell execution with encoded commands (-enc/-encodedcommand) or DownloadString, common indicators of malicious script delivery.",
+      "tags": ["powershell", "execution", "encoded", "download"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     },
     {
       "source": "Wazuh",
       "name": "PowerShell Script Block Logging",
       "query": "<rule id=\"100002\" level=\"12\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.scriptBlockText\">Invoke-Mimikatz|DownloadString</field>\n</rule>",
       "confidence": "High",
-      "reference": "https://wazuh.com/"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Wazuh",
+      "data_category": "Security Event",
+      "reference": "https://documentation.wazuh.com/current/user-manual/ruleset/rules-classification.html",
+      "platform": "Windows",
+      "data_source": "Wazuh",
+      "rule_type": "script_execution",
+      "description": "Wazuh rule to detect malicious PowerShell script block content including Invoke-Mimikatz and DownloadString via Windows Event ID 4104.",
+      "tags": ["powershell", "execution", "mimikatz", "script-block"],
+      "last_updated": "2026-05-27",
+      "author": "Wazuh"
     },
     {
       "source": "Sysmon",
       "name": "PowerShell Network Connection",
       "query": "EventID=3 AND Image='*\\powershell.exe'",
       "confidence": "Medium",
-      "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003"
+      "severity": "Medium",
+      "status": "verified",
+      "rule_format": "Sysmon",
+      "data_category": "Network",
+      "reference": "https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "network",
+      "description": "Detects PowerShell making outbound network connections, which may indicate C2 communication, download cradles, or data exfiltration.",
+      "tags": ["powershell", "network", "c2", "exfiltration"],
+      "last_updated": "2026-05-27",
+      "author": "Microsoft Sysmon"
     }
   ],
   "T1003.001": [
@@ -53,14 +119,36 @@
       "name": "LSASS Memory Dump",
       "query": "EventID=10 AND TargetImage='*\\lsass.exe' AND GrantedAccess='0x1010'",
       "confidence": "High",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process Access",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_access/proc_access_win_lsass_susp_access_flag.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_access",
+      "description": "Detects suspicious access to LSASS process memory with the 0x1010 access flag used by Mimikatz and similar tools to dump credentials.",
+      "tags": ["credential-access", "lsass", "mimikatz", "memory-dump"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     },
     {
       "source": "Elastic",
       "name": "Credential Dumping via Mimikatz",
       "query": "process where event.type == \"start\" and process.name : \"mimikatz.exe\"",
       "confidence": "High",
-      "reference": "https://github.com/elastic/detection-rules/blob/main/rules/windows/credential_access_mimikatz.toml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Elastic",
+      "data_category": "Process Creation",
+      "reference": "https://github.com/elastic/detection-rules/blob/main/rules/windows/credential_access_mimikatz.toml",
+      "platform": "Windows",
+      "data_source": "Elastic Endpoint",
+      "rule_type": "process_creation",
+      "description": "Detects direct execution of mimikatz.exe. Highly suspicious — Mimikatz is exclusively used for credential theft and post-exploitation.",
+      "tags": ["credential-access", "mimikatz", "execution"],
+      "last_updated": "2026-05-27",
+      "author": "Elastic"
     }
   ],
   "T1053.005": [
@@ -69,14 +157,36 @@
       "name": "Scheduled Task Creation",
       "query": "EventID=1 AND Image='*\\schtasks.exe' AND CommandLine contains '/create'",
       "confidence": "Medium",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml"
+      "severity": "Medium",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process Creation",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_schtasks_create.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_creation",
+      "description": "Detects creation of scheduled tasks via schtasks.exe. Used for persistence and sometimes lateral movement.",
+      "tags": ["persistence", "scheduled-task", "schtasks"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     },
     {
       "source": "Wazuh",
       "name": "Scheduled Task Registry Modification",
       "query": "<rule id=\"100003\" level=\"10\">\n  <if_sid>60103</if_sid>\n  <field name=\"win.eventdata.TargetObject\">*\\Schedule\\TaskCache\\Tasks\\*</field>\n</rule>",
       "confidence": "High",
-      "reference": ""
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Wazuh",
+      "data_category": "Registry",
+      "reference": "https://documentation.wazuh.com/",
+      "platform": "Windows",
+      "data_source": "Wazuh",
+      "rule_type": "registry",
+      "description": "Detects modifications to the Windows Task Scheduler registry hive at HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache.",
+      "tags": ["persistence", "scheduled-task", "registry"],
+      "last_updated": "2026-05-27",
+      "author": "Wazuh"
     }
   ],
   "T1190": [
@@ -85,14 +195,36 @@
       "name": "Log4j JNDI Lookup Execution",
       "query": "alert http $EXTERNAL_NET any -> $HOME_NET any (msg:\"Log4j JNDI Attempt\"; content:\"${jndi:\"; sid:1000002;)",
       "confidence": "High",
-      "reference": "https://rules.emergingthreats.net/"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Suricata",
+      "data_category": "Network",
+      "reference": "https://rules.emergingthreats.net/",
+      "platform": "network",
+      "data_source": "Suricata",
+      "rule_type": "network",
+      "description": "Detects CVE-2021-44228 (Log4Shell) exploitation attempts via JNDI injection pattern in HTTP requests.",
+      "tags": ["initial-access", "exploit", "log4j", "cve-2021-44228", "jndi"],
+      "last_updated": "2026-05-27",
+      "author": "Emerging Threats"
     },
     {
       "source": "Wazuh",
       "name": "Web Server Exploitation",
       "query": "<rule id=\"100004\" level=\"12\">\n  <if_sid>31101</if_sid>\n  <regex>jndi:ldap</regex>\n</rule>",
       "confidence": "High",
-      "reference": ""
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Wazuh",
+      "data_category": "Network",
+      "reference": "https://documentation.wazuh.com/",
+      "platform": "Linux,Windows",
+      "data_source": "Wazuh",
+      "rule_type": "network",
+      "description": "Detects Log4j JNDI LDAP exploitation pattern in web server logs via Wazuh log analysis.",
+      "tags": ["initial-access", "exploit", "log4j", "web-server"],
+      "last_updated": "2026-05-27",
+      "author": "Wazuh"
     }
   ],
   "T1505.003": [
@@ -101,7 +233,18 @@
       "name": "Webshell Creation",
       "query": "EventID=11 AND Image='*\\w3wp.exe' AND TargetFilename='*\\.aspx'",
       "confidence": "High",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "File Modification",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/file_event_win_webshell_creation.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "file_modification",
+      "description": "Detects creation of .aspx files by the IIS worker process (w3wp.exe), a strong indicator of webshell deployment.",
+      "tags": ["persistence", "webshell", "iis", "w3wp"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ],
   "T1068": [
@@ -110,7 +253,18 @@
       "name": "Exploitation for Privilege Escalation",
       "query": "EventID=1 AND ParentImage='*\\spoolsv.exe' AND Image='*\\cmd.exe'",
       "confidence": "High",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process Creation",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_spoolsv_susp_child_process.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_creation",
+      "description": "Detects cmd.exe spawned by spoolsv.exe, a classic indicator of Print Spooler exploitation (e.g., PrintNightmare CVE-2021-1675).",
+      "tags": ["privilege-escalation", "exploit", "spoolsv", "printnightmare"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ],
   "T1071.004": [
@@ -119,7 +273,18 @@
       "name": "DNS Tunneling Payload",
       "query": "alert dns $HOME_NET any -> $EXTERNAL_NET 53 (msg:\"Suspicious Long DNS Query\"; dsize:>100; sid:1000003;)",
       "confidence": "Medium",
-      "reference": "https://rules.emergingthreats.net/"
+      "severity": "Medium",
+      "status": "verified",
+      "rule_format": "Suricata",
+      "data_category": "Network",
+      "reference": "https://rules.emergingthreats.net/",
+      "platform": "network",
+      "data_source": "Suricata",
+      "rule_type": "network",
+      "description": "Detects unusually long DNS queries (>100 bytes) that may indicate DNS tunneling for C2 communication or data exfiltration.",
+      "tags": ["command-and-control", "dns-tunneling", "exfiltration", "covert-channel"],
+      "last_updated": "2026-05-27",
+      "author": "Emerging Threats"
     }
   ],
   "T1550.002": [
@@ -128,7 +293,18 @@
       "name": "Pass the Hash Activity",
       "query": "EventID=4624 AND LogonType=9 AND AuthenticationPackageName='Negotiate'",
       "confidence": "High",
-      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_pass_the_hash.yml"
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Authentication",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_pass_the_hash.yml",
+      "platform": "Windows",
+      "data_source": "Windows Event Log",
+      "rule_type": "auth",
+      "description": "Detects Pass-the-Hash (PtH) attacks by identifying NewCredentials logon (Type 9) with Negotiate authentication package, characteristic of PtH using stolen NTLM hashes.",
+      "tags": ["lateral-movement", "credential-access", "pass-the-hash", "ntlm"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ],
   "T1055.001": [
@@ -137,7 +313,18 @@
       "name": "Process Injection - Dynamic-link Library Injection",
       "query": "EventID=8 AND TargetImage='*\\svchost.exe'",
       "confidence": "High",
-      "reference": ""
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process Access",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/create_remote_thread/create_remote_thread_win_susp_targets.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_access",
+      "description": "Detects CreateRemoteThread calls targeting svchost.exe (Sysmon Event ID 8), a common DLL injection technique for code execution in the context of a trusted system process.",
+      "tags": ["defense-evasion", "dll-injection", "process-injection", "svchost"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ],
   "T1070.001": [
@@ -146,7 +333,18 @@
       "name": "Windows Event Log Cleared",
       "query": "EventID=1102 OR EventID=104",
       "confidence": "High",
-      "reference": ""
+      "severity": "High",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Audit",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_event_log_cleared.yml",
+      "platform": "Windows",
+      "data_source": "Windows Event Log",
+      "rule_type": "auth",
+      "description": "Detects clearing of Windows Security (1102) or System (104) event logs, a common attacker technique to destroy forensic evidence.",
+      "tags": ["defense-evasion", "indicator-removal", "log-clearing", "forensics"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ],
   "T1218": [
@@ -155,7 +353,18 @@
       "name": "System Binary Proxy Execution",
       "query": "EventID=1 AND (Image='*\\rundll32.exe' OR Image='*\\regsvr32.exe')",
       "confidence": "Medium",
-      "reference": ""
+      "severity": "Medium",
+      "status": "verified",
+      "rule_format": "Sigma",
+      "data_category": "Process Creation",
+      "reference": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_lolbin_execution.yml",
+      "platform": "Windows",
+      "data_source": "Sysmon",
+      "rule_type": "process_creation",
+      "description": "Detects execution of signed Windows binaries (LOLBins) like rundll32.exe and regsvr32.exe that can proxy malicious code execution to bypass application whitelisting.",
+      "tags": ["defense-evasion", "lolbin", "rundll32", "regsvr32", "bypass"],
+      "last_updated": "2026-05-27",
+      "author": "SigmaHQ"
     }
   ]
 }
